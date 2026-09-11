@@ -61,6 +61,8 @@ body:has(.agent-screen) nav { display: none; }
 .agent-message { max-width: 88%; margin: .75rem 0; padding: .78rem .9rem; border-radius: 1rem; font-size: .84rem; line-height: 1.4; font-weight: 700; }
 .agent-message-you { margin-left: auto; border-bottom-right-radius: .25rem; background: #f3f0fb; color: #1f1a26; }
 .agent-message-circle { border-bottom-left-radius: .25rem; background: #29252e; color: #e6e0ec; }
+.agent-thinking { display: flex; align-items: center; gap: .45rem; margin: .9rem .15rem; color: #c9c2d0; font-size: .7rem; font-weight: 800; }
+.agent-thinking i { width: .55rem; height: .55rem; border-radius: 50%; background: #d9ff8b; box-shadow: 0 0 0 .22rem #d9ff8b26; animation: thinking-pulse 1s ease-in-out infinite alternate; }
 .agent-suggestions { display: grid; gap: .55rem; margin-top: 1rem; }
 .agent-suggestion { display: flex; align-items: center; justify-content: space-between; border: 1px solid #56505e; border-radius: 1.1rem; background: #25222aeb; padding: .75rem; }
 .agent-suggestion > div { display: flex; min-width: 0; align-items: center; gap: .62rem; }
@@ -77,8 +79,10 @@ body:has(.agent-screen) nav { display: none; }
 .agent-composer .voice-button span:not(.voice-pulse) { font-size: 1rem; }
 .agent-composer .voice-button.is-listening { background: #d9ff8b; font-size: .67rem; }
 .agent-send { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border: 0; border-radius: 50%; background: #202a2e; color: #f9f8fc; font-size: 1.1rem; font-weight: 900; cursor: pointer; }
+.agent-send:disabled, .agent-composer textarea:disabled { cursor: wait; opacity: .68; }
 .agent-privacy { width: 100%; max-width: 25rem; margin: .62rem auto 0; color: #938b9a; text-align: center; font-size: .61rem; line-height: 1.35; font-weight: 650; }
 @keyframes orb-breathe { 50% { transform: scale(1.08); box-shadow: 0 0 2.5rem 1.2rem #d9ff8b65, 0 0 6rem 2rem #b89cff37; } }
+@keyframes thinking-pulse { to { transform: scale(1.35); opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .agent-orb, .voice-pulse { animation: none; } }
 
 .catchup-page { padding: 1.7rem 1.25rem 2rem; }
