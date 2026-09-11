@@ -63,6 +63,7 @@ body:has(.agent-screen) nav { display: none; }
 .agent-message-circle { border-bottom-left-radius: .25rem; background: #29252e; color: #e6e0ec; }
 .agent-thinking { display: flex; align-items: center; gap: .45rem; margin: .9rem .15rem; color: #c9c2d0; font-size: .7rem; font-weight: 800; }
 .agent-thinking i { width: .55rem; height: .55rem; border-radius: 50%; background: #d9ff8b; box-shadow: 0 0 0 .22rem #d9ff8b26; animation: thinking-pulse 1s ease-in-out infinite alternate; }
+.agent-error { margin: .75rem .15rem 0; color: #ffb2c0; font-size: .7rem; line-height: 1.35; font-weight: 800; }
 .agent-suggestions { display: grid; gap: .55rem; margin-top: 1rem; }
 .agent-suggestion { display: flex; align-items: center; justify-content: space-between; border: 1px solid #56505e; border-radius: 1.1rem; background: #25222aeb; padding: .75rem; }
 .agent-suggestion > div { display: flex; min-width: 0; align-items: center; gap: .62rem; }
