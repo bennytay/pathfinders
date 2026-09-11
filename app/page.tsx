@@ -8,7 +8,7 @@ export default async function Home() {
     include: { interests: { include: { interest: true } }, societies: { include: { society: true } } },
   });
   const plannerFriends: PlannerFriend[] = friends.map((friend) => ({
-    id: friend.id, name: friend.preferredName, nickname: friend.nickname, closeness: friend.closeness, crush: friend.crush,
+    id: friend.id, name: friend.preferredName, nickname: friend.nickname, university: friend.university, closeness: friend.closeness, crush: friend.crush,
     interests: friend.interests.map(({ interest }) => interest.name), societies: friend.societies.map(({ society }) => society.name),
     daysSinceContact: daysSince(friend.lastContactedAt),
   }));

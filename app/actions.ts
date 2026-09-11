@@ -12,14 +12,15 @@ const friendSchema = z.object({
   pronouns: z.string().max(60).optional(),
   university: z.string().min(1).max(100),
   campus: z.string().max(100).optional(),
-  faculty: z.string().max(100).optional(),
   degreeProgram: z.string().max(100).optional(),
   yearOfStudy: z.string().max(30).optional(),
   closeness: z.coerce.number().int().min(1).max(5),
-  crush: z.enum(["none", "crush", "dating", "past"]),
+  crush: z.enum(["none", "friends", "crush", "dating", "past"]),
   myIntent: z.enum(["friend", "date", "unclear"]),
   howWeMet: z.string().min(1),
   privateNote: z.string().max(2000).optional(),
+  instagram: z.string().regex(/^[a-zA-Z0-9._]{1,30}$/).optional(),
+  snapchat: z.string().regex(/^[a-zA-Z0-9._-]{1,50}$/).optional(),
 });
 
 const eventSchema = z.object({
@@ -42,12 +43,14 @@ export async function createFriend(formData: FormData) {
   const parsed = friendSchema.parse({
     preferredName: formData.get("preferredName"), nickname: blankToUndefined(formData.get("nickname")),
     pronouns: blankToUndefined(formData.get("pronouns")), university: formData.get("university") || "UNSW",
-    campus: blankToUndefined(formData.get("campus")), faculty: blankToUndefined(formData.get("faculty")),
+    campus: blankToUndefined(formData.get("campus")),
     degreeProgram: blankToUndefined(formData.get("degreeProgram")), yearOfStudy: blankToUndefined(formData.get("yearOfStudy")),
-    closeness: formData.get("closeness"), crush: formData.get("crush") || "none", myIntent: formData.get("myIntent") || "friend",
+    closeness: formData.get("closeness"), crush: formData.get("crush") || "none", myIntent: ["crush", "dating"].includes(String(formData.get("crush"))) ? "date" : "friend",
     howWeMet: formData.get("howWeMet") || "other", privateNote: blankToUndefined(formData.get("privateNote")),
+    instagram: blankToUndefined(formData.get("instagram"))?.replace(/^@/, ""), snapchat: blankToUndefined(formData.get("snapchat"))?.replace(/^@/, ""),
   });
-  const friend = await db.friend.create({ data: parsed });
+  const { instagram, snapchat, ...friendData } = parsed;
+  const friend = await db.friend.create({ data: { ...friendData, contactPoints: { create: [instagram && { kind: "instagram", value: instagram, label: `@${instagram}` }, snapchat && { kind: "snapchat", value: snapchat, label: `@${snapchat}` }].filter(Boolean) as { kind: string; value: string; label: string }[] } } });
   revalidatePath("/"); revalidatePath("/friends");
   redirect(`/friends/${friend.id}`);
 }
