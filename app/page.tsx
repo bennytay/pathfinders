@@ -1,69 +1,12 @@
-import Image from "next/image";
+import Link from "next/link";
+import { db } from "@/lib/db";
+import { relationshipSnapshot } from "@/lib/relationship";
+import { Avatar, Empty, FriendRow, PageTop, type TinyFriend } from "@/components/circle-ui";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export default async function Home() {
+  const [friends, events] = await Promise.all([db.friend.findMany({ orderBy: [{ closeness: "desc" }, { preferredName: "asc" }] }), db.event.findMany({ take: 4, orderBy: { happenedAt: "desc" }, include: { attendees: { include: { friend: true } } } })]);
+  const withStatus = friends.map((friend) => ({ ...friend, snap: relationshipSnapshot(friend) }));
+  const overdue = withStatus.filter(({ closeness, snap }) => closeness >= 4 && snap.overdue);
+  const pullUp = withStatus.filter(({ snap }) => snap.overdue).slice(0, 4);
+  return <><PageTop kicker="your private orbit" title="hey you 🫶" action={<Link href="/friends/new" className="press sticker rounded-full bg-[#fffc00] px-3 py-2 text-sm font-black text-[#19161d]">+ person</Link>}/><section className="px-5"><div className="mb-3 flex items-end justify-between"><h2 className="font-black">stories you&apos;ve ghosted a bit 👀</h2><span className="text-xs font-bold text-[#aaa4b2]">{overdue.length} waiting</span></div>{overdue.length ? <div className="flex gap-4 overflow-x-auto pb-3">{overdue.map((friend) => <Link href={`/friends/${friend.id}`} key={friend.id} className="press flex w-16 shrink-0 flex-col items-center gap-1 text-center"><Avatar friend={friend} size={58}/><span className="w-full truncate text-xs font-black">{friend.preferredName}</span></Link>)}</div> : <div className="rounded-3xl bg-[#282430] px-4 py-3 text-sm font-bold text-[#c9c4d2]">everyone&apos;s in the loop rn, rare W ✨</div>}</section><section className="mt-6 px-5"><div className="mb-2 flex items-center justify-between"><h2 className="font-black">pull up on these people 😭</h2><Link href="/friends?filter=overdue" className="text-xs font-black text-[#00f0ff]">see orbit →</Link></div><div className="sticker rounded-[28px] bg-[#fffc00] p-2 text-[#18151b]">{pullUp.length ? pullUp.map((friend) => <FriendRow key={friend.id} friend={friend as TinyFriend} subtitle={`haven't pulled up in ${friend.snap.daysSinceContact}d 😭`}/>) : <p className="p-4 text-center font-black">no friendship fires. go be mysterious 💅</p>}</div></section><section className="mt-7 px-5"><div className="mb-2 flex items-center justify-between"><h2 className="font-black">last night energy 📸</h2><Link href="/events" className="text-xs font-black text-[#00f0ff]">all nights →</Link></div>{events.length ? <div className="space-y-2">{events.map((event) => <article key={event.id} className="sticker rounded-[25px] bg-[#2c2833] px-4 py-3"><div className="flex justify-between gap-3"><div><p className="font-black">{event.title}</p><p className="mt-1 text-xs font-bold text-[#b8b2c1]">{event.location || "somewhere iconic"} • {event.attendees.map((a) => a.friend.preferredName).join(", ")}</p></div><span className="text-lg">{"⭐".repeat(event.vibe || 0)}</span></div></article>)}</div> : <Empty>no nights logged yet. your future self is begging for receipts 📸</Empty>}</section></>;
 }

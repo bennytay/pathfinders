@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Friend {
+  id                     String         @id @default(cuid())
+  preferredName          String
+  legalName              String?
+  nickname               String?
+  photoPath              String?
+  pronouns               String?
+  howWeMet               String
+  howWeMetNote           String?
+  university             String         @default("UNSW")
+  campus                 String?
+  faculty                String?
+  degreeProgram          String?
+  yearOfStudy            String?
+  expectedGraduationYear Int?
+  residential            String?        @default("none")
+  collegeName            String?
+  usuallySeeThem         String?
+  relationshipStatus     String         @default("unknown")
+  openTo                 String         @default("unknown")
+  myIntent               String         @default("friend")
+  closeness              Int            @default(1)
+  crush                  String         @default("none")
+  crushIntensity         Int?
+  stayInTouchDays        Int?
+  privateNote            String?
+  lastContactedAt        DateTime?
+  lastSeenInPersonAt     DateTime?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  contactPoints          ContactPoint[]
+  eventAttendances       EventAttendee[]
+  interests              FriendInterest[]
+  societies              FriendSociety[]
+  courses                FriendCourse[]
+  suggestions            Suggestion[]
+
+  @@index([closeness])
+  @@index([lastContactedAt])
+}
+
+model ContactPoint {
+  id       String @id @default(cuid())
+  friendId String
+  kind     String
+  value    String
+  label    String?
+  friend   Friend @relation(fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@index([friendId])
+}
+
+model Interest {
+  id      String           @id @default(cuid())
+  name    String           @unique
+  friends FriendInterest[]
+}
+
+model FriendInterest {
+  friendId   String
+  interestId String
+  friend     Friend   @relation(fields: [friendId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([friendId, interestId])
+}
+
+model Society {
+  id      String        @id @default(cuid())
+  name    String        @unique
+  friends FriendSociety[]
+}
+
+model FriendSociety {
+  friendId  String
+  societyId String
+  friend    Friend  @relation(fields: [friendId], references: [id], onDelete: Cascade)
+  society   Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  @@id([friendId, societyId])
+}
+
+model Course {
+  id      String       @id @default(cuid())
+  name    String       @unique
+  friends FriendCourse[]
+}
+
+model FriendCourse {
+  friendId String
+  courseId String
+  friend   Friend @relation(fields: [friendId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([friendId, courseId])
+}
+
+model Event {
+  id          String          @id @default(cuid())
+  happenedAt  DateTime
+  channel     String
+  hangoutType String?
+  title       String
+  notes       String?
+  location    String?
+  vibe        Int?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  attendees   EventAttendee[]
+
+  @@index([happenedAt])
+}
+
+model EventAttendee {
+  eventId  String
+  friendId String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  friend   Friend @relation(fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, friendId])
+  @@index([friendId])
+}
+
+model Suggestion {
+  id        String   @id @default(cuid())
+  friendId  String
+  title     String
+  detail    String
+  template  String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  friend    Friend   @relation(fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@index([friendId])
+  @@index([status])
+}
