@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { getFriends } from "@/lib/demo-data";
 import { daysSince } from "@/lib/social-time";
 
 export const runtime = "nodejs";
@@ -30,12 +30,8 @@ export async function POST(request: Request) {
 
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
-    const friends = await db.friend.findMany({
-      select: { id: true, preferredName: true, nickname: true, university: true, closeness: true, lastContactedAt: true, interests: { select: { interest: { select: { name: true } } } }, societies: { select: { society: { select: { name: true } } } } },
-      orderBy: [{ closeness: "desc" }, { preferredName: "asc" }],
-      take: 30,
-    });
-    const contactContext = friends.map((friend) => ({ id: friend.id, name: friend.nickname || friend.preferredName, university: friend.university, closeness: friend.closeness, daysSinceContact: daysSince(friend.lastContactedAt), interests: friend.interests.map(({ interest }) => interest.name), societies: friend.societies.map(({ society }) => society.name) }));
+    const friends = (await getFriends()).slice(0, 30);
+    const contactContext = friends.map((friend) => ({ id: friend.id, name: friend.nickname || friend.preferred_name, university: friend.university, closeness: friend.closeness, daysSinceContact: daysSince(friend.last_contacted_at ? new Date(friend.last_contacted_at) : null), interests: friend.interests, societies: friend.societies }));
     const instruction = "You are Circle, a thoughtful social-planning assistant for university students. Recommend only people from the supplied contact list. Never claim anyone is available, interested, or wants to meet. Be casual, brief, and kind. Return one JSON object, with no Markdown or extra keys: { reply: string, plan: { mood: string, setting: string, size: string, when: string }, recommendedFriendIds: string[], reasons: Record<string, string> }. Recommend zero to three supplied ids only. reasons maps each recommended id to one specific, non-judgemental sentence.";
     const model = (process.env.GEMINI_MODEL || "gemini-3.5-flash").replace(/^models\//, "");
     const controller = new AbortController();

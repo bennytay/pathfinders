@@ -1,16 +1,12 @@
-import { db } from "@/lib/db";
+import { getFriends } from "@/lib/demo-data";
 import { HangoutPlanner, type PlannerFriend } from "@/components/hangout-planner";
 import { daysSince } from "@/lib/social-time";
 
 export default async function Home() {
-  const friends = await db.friend.findMany({
-    orderBy: [{ closeness: "desc" }, { preferredName: "asc" }],
-    include: { interests: { include: { interest: true } }, societies: { include: { society: true } } },
-  });
+  const friends = await getFriends();
   const plannerFriends: PlannerFriend[] = friends.map((friend) => ({
-    id: friend.id, name: friend.preferredName, nickname: friend.nickname, university: friend.university, closeness: friend.closeness, crush: friend.crush,
-    interests: friend.interests.map(({ interest }) => interest.name), societies: friend.societies.map(({ society }) => society.name),
-    daysSinceContact: daysSince(friend.lastContactedAt),
+    id: friend.id, name: friend.preferred_name, nickname: friend.nickname, university: friend.university, closeness: friend.closeness, crush: friend.crush,
+    interests: friend.interests, societies: friend.societies, daysSinceContact: daysSince(friend.last_contacted_at ? new Date(friend.last_contacted_at) : null),
   }));
   return <HangoutPlanner friends={plannerFriends}/>;
 }
