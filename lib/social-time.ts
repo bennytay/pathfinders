@@ -5,3 +5,7 @@ export function daysSince(date: Date | null, now = Date.now()) {
 export function localDateTimeNow() {
   return new Date().toISOString().slice(0, 16);
 }
+
+export function nowDate() {
+  return new Date();
+}

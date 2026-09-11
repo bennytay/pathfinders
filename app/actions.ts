@@ -51,7 +51,7 @@ export async function createFriend(formData: FormData) {
   });
   const { instagram, snapchat, ...friendData } = parsed;
   const friend = await db.friend.create({ data: { ...friendData, contactPoints: { create: [instagram && { kind: "instagram", value: instagram, label: `@${instagram}` }, snapchat && { kind: "snapchat", value: snapchat, label: `@${snapchat}` }].filter(Boolean) as { kind: string; value: string; label: string }[] } } });
-  revalidatePath("/"); revalidatePath("/friends");
+  revalidatePath("/"); revalidatePath("/friends"); revalidatePath("/catchup");
   redirect(`/friends/${friend.id}`);
 }
 
@@ -72,7 +72,7 @@ export async function createEvent(formData: FormData) {
       await tx.friend.update({ where: { id: friendId }, data: { lastContactedAt, lastSeenInPersonAt } });
     }
   });
-  revalidatePath("/"); revalidatePath("/friends"); revalidatePath("/events");
+  revalidatePath("/"); revalidatePath("/friends"); revalidatePath("/events"); revalidatePath("/catchup");
   redirect("/events");
 }
 

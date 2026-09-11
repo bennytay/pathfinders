@@ -45,6 +45,7 @@ export function HangoutPlanner({ friends }: { friends: PlannerFriend[] }) {
   }
   return <main className="agent-screen">
     <div className="agent-ambient agent-ambient-one"/><div className="agent-ambient agent-ambient-two"/>
+    <Link href="/friends" className="agent-exit">← My circle</Link>
     <section className="agent-conversation" aria-label="Circle AI chat">
       {messages.length === 0 ? <div className="agent-empty"><div className="agent-orb"/><p className="agent-kicker">CIRCLE AI</p><h1>What kind of day<br/>are we making?</h1><p>Say it however it comes out. I&apos;ll turn it into a plan with your people.</p></div> : <div className="agent-thread">{messages.map((message, index) => <p className={`agent-message agent-message-${message.from}`} key={`${message.text}-${index}`}>{message.text}</p>)}{recommendations.length ? <div className="agent-suggestions" aria-label="Recommended people">{recommendations.map((friend) => <article key={friend.id} className="agent-suggestion"><div><span className="agent-avatar">{friend.name.slice(0, 1)}</span><div><div className="agent-friend"><h2>{friend.nickname || friend.name}</h2><UniversityMark university={friend.university}/></div><p>{reason(friend, plan!)}</p></div></div><Link href={`/friends/${friend.id}`} aria-label={`View ${friend.name}`}>↗</Link></article>)}</div> : null}</div>}
     </section>
