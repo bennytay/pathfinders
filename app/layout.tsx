@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 
-export const metadata: Metadata = { title: "Circle 🫶", description: "Your private uni orbit." };
-const tabs = [["/", "🔥", "Home"], ["/friends", "👥", "People"], ["/events/new", "📸", "Log"], ["/suggestions", "✨", "Ideas"]];
+export const metadata: Metadata = { title: "Circle, plans with your people", description: "Tell Circle the hangout you want. It finds the people to make it happen." };
+const tabs = [["/", "✦", "Plan"], ["/friends", "👥", "People"], ["/events/new", "＋", "Log"], ["/suggestions", "♡", "Saved"]];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><main className="phone-shell">{children}</main><nav aria-label="Main navigation" className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-[430px] -translate-x-1/2 items-end justify-around border-t-2 border-[#393542] bg-[#201d26]/95 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur"><Link href="/" aria-label="Circle home" className="absolute -top-6 left-5 grid h-12 w-12 place-items-center rounded-full border-2 border-[#08080a] bg-[#fffc00] text-xl shadow-[3px_3px_0_#08080a]">🫶</Link>{tabs.map(([href, emoji, label]) => <Link key={href} href={href} className={`press flex min-w-14 flex-col items-center gap-0.5 rounded-2xl px-2 pb-0.5 text-[11px] font-black ${label === "Log" ? "-mt-7 border-2 border-black bg-[#fffc00] px-4 py-2 text-[#17151a] shadow-[3px_3px_0_#08080a]" : "text-[#c9c4d2]"}`}><span className="text-xl">{emoji}</span><span>{label}</span></Link>)}</nav></body></html>;
+  return <html lang="en"><body><main className="phone-shell">{children}</main><nav aria-label="Main navigation" className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-[430px] -translate-x-1/2 items-end justify-around border-t-2 border-[#393542] bg-[#201d26]/95 px-3 pb-[max(.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">{tabs.map(([href, emoji, label]) => <Link key={href} href={href} className={`press flex min-w-14 flex-col items-center gap-0.5 rounded-2xl px-2 pb-0.5 text-[11px] font-black ${label === "Log" ? "-mt-7 border-2 border-black bg-[#fffc00] px-4 py-2 text-[#17151a] shadow-[3px_3px_0_#08080a]" : "text-[#c9c4d2]"}`}><span className="text-xl">{emoji}</span><span>{label}</span></Link>)}</nav></body></html>;
 }

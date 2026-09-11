@@ -1,12 +1,16 @@
-import Link from "next/link";
 import { db } from "@/lib/db";
-import { relationshipSnapshot } from "@/lib/relationship";
-import { Avatar, Empty, FriendRow, PageTop, type TinyFriend } from "@/components/circle-ui";
+import { HangoutPlanner, type PlannerFriend } from "@/components/hangout-planner";
+import { daysSince } from "@/lib/social-time";
 
 export default async function Home() {
-  const [friends, events] = await Promise.all([db.friend.findMany({ orderBy: [{ closeness: "desc" }, { preferredName: "asc" }] }), db.event.findMany({ take: 4, orderBy: { happenedAt: "desc" }, include: { attendees: { include: { friend: true } } } })]);
-  const withStatus = friends.map((friend) => ({ ...friend, snap: relationshipSnapshot(friend) }));
-  const overdue = withStatus.filter(({ closeness, snap }) => closeness >= 4 && snap.overdue);
-  const pullUp = withStatus.filter(({ snap }) => snap.overdue).slice(0, 4);
-  return <><PageTop kicker="your private orbit" title="hey you 🫶" action={<Link href="/friends/new" className="press sticker rounded-full bg-[#fffc00] px-3 py-2 text-sm font-black text-[#19161d]">+ person</Link>}/><section className="px-5"><div className="mb-3 flex items-end justify-between"><h2 className="font-black">stories you&apos;ve ghosted a bit 👀</h2><span className="text-xs font-bold text-[#aaa4b2]">{overdue.length} waiting</span></div>{overdue.length ? <div className="flex gap-4 overflow-x-auto pb-3">{overdue.map((friend) => <Link href={`/friends/${friend.id}`} key={friend.id} className="press flex w-16 shrink-0 flex-col items-center gap-1 text-center"><Avatar friend={friend} size={58}/><span className="w-full truncate text-xs font-black">{friend.preferredName}</span></Link>)}</div> : <div className="rounded-3xl bg-[#282430] px-4 py-3 text-sm font-bold text-[#c9c4d2]">everyone&apos;s in the loop rn, rare W ✨</div>}</section><section className="mt-6 px-5"><div className="mb-2 flex items-center justify-between"><h2 className="font-black">pull up on these people 😭</h2><Link href="/friends?filter=overdue" className="text-xs font-black text-[#00f0ff]">see orbit →</Link></div><div className="sticker rounded-[28px] bg-[#fffc00] p-2 text-[#18151b]">{pullUp.length ? pullUp.map((friend) => <FriendRow key={friend.id} friend={friend as TinyFriend} subtitle={`haven't pulled up in ${friend.snap.daysSinceContact}d 😭`}/>) : <p className="p-4 text-center font-black">no friendship fires. go be mysterious 💅</p>}</div></section><section className="mt-7 px-5"><div className="mb-2 flex items-center justify-between"><h2 className="font-black">last night energy 📸</h2><Link href="/events" className="text-xs font-black text-[#00f0ff]">all nights →</Link></div>{events.length ? <div className="space-y-2">{events.map((event) => <article key={event.id} className="sticker rounded-[25px] bg-[#2c2833] px-4 py-3"><div className="flex justify-between gap-3"><div><p className="font-black">{event.title}</p><p className="mt-1 text-xs font-bold text-[#b8b2c1]">{event.location || "somewhere iconic"} • {event.attendees.map((a) => a.friend.preferredName).join(", ")}</p></div><span className="text-lg">{"⭐".repeat(event.vibe || 0)}</span></div></article>)}</div> : <Empty>no nights logged yet. your future self is begging for receipts 📸</Empty>}</section></>;
+  const friends = await db.friend.findMany({
+    orderBy: [{ closeness: "desc" }, { preferredName: "asc" }],
+    include: { interests: { include: { interest: true } }, societies: { include: { society: true } } },
+  });
+  const plannerFriends: PlannerFriend[] = friends.map((friend) => ({
+    id: friend.id, name: friend.preferredName, nickname: friend.nickname, closeness: friend.closeness, crush: friend.crush,
+    interests: friend.interests.map(({ interest }) => interest.name), societies: friend.societies.map(({ society }) => society.name),
+    daysSinceContact: daysSince(friend.lastContactedAt),
+  }));
+  return <HangoutPlanner friends={plannerFriends}/>;
 }
