@@ -2,7 +2,7 @@
 
 InnerCircle is a local-first, privacy-first context layer for a deliberately small circle of close friends. It helps a person capture a reflection, review any proposed relationship context, and create an explainable opportunity to meet in person.
 
-This repository is at the Phase 1 foundation milestone. Fixture mode is the supported way to run it today: no account, paid service, API key, microphone permission, or network connection is required.
+This repository is at the Phase 2 local-first domain-core milestone. Fixture mode and a local workspace are supported today: no account, paid service, API key, microphone permission, or network connection is required.
 
 ## Quick start
 
@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. The homepage is labelled fixture mode and uses only synthetic data. It never writes a database or makes a network request.
+Open `http://localhost:3000`. Create an empty circle or load a clearly labelled synthetic fixture. Product data is stored only in the browser’s local storage; it never makes a network request.
 
 ## Verify the foundation
 
@@ -41,7 +41,7 @@ Read the [product contract](docs/product-contract.md), [privacy model](docs/priv
 
 ## Status
 
-The next milestone is the local-first domain core. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
+The next milestone is voice-capture and on-device-transcription feasibility. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
 
 ## Contributing
 

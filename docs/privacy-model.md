@@ -2,7 +2,7 @@
 
 ## Current Phase 1 behavior
 
-Fixture mode is local, contains only synthetic examples, and has no remote AI, transcription, analytics, event, auth, storage, or database dependency. It is safe to run without an account or environment variables.
+Fixture mode is local, contains only synthetic examples, and has no remote AI, transcription, analytics, event, auth, or database dependency. Phase 2 stores a user-created local workspace in browser local storage. It is safe to run without an account or environment variables, but browser local storage is not a substitute for device security or encrypted sync.
 
 ## Data separation required for future phases
 
@@ -18,4 +18,4 @@ No background recording, passive listening, background location collection, cont
 
 ## User controls
 
-The user must be able to inspect, export, correct, forget, and delete their data. Deleting a friend must remove linked relationship context in a documented cascade. The app must remain useful with remote processing disabled.
+The user can inspect raw local records, export the full workspace as JSON, reset it, and delete the whole workspace. Deleting a friend cascades to linked notes, interactions, proposals, confirmed memories, prompts, and plan drafts. The app remains useful with remote processing disabled.

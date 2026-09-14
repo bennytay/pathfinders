@@ -1,4 +1,4 @@
-import { BETA_ACTIVE_FRIEND_LIMIT } from "@/lib/fixtures";
+import { BETA_ACTIVE_FRIEND_LIMIT } from "@/lib/workspace";
 
 export type ProcessingChoice = "on-device" | "remote-opt-in";
 

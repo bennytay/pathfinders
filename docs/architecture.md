@@ -13,7 +13,9 @@ Friend + interaction repositories <- relationship rules -> explainable next acti
                                   event-provider adapters -> plan draft -> user copy/share
 ```
 
-Phase 1 implements only the fixture-mode boundary and guard functions that express the beta friend cap, user review requirement, and remote-consent requirement. It intentionally does not implement a database, microphone, AI adapter, external events adapter, or sharing integration.
+Phase 2 implements a versioned local repository backed by browser local storage. It owns the circle, friends, text notes, interactions, proposed facts, confirmed facts, activities, prompts, plan drafts, privacy settings, fixture reset, JSON export, and deletion cascades. It intentionally does not implement microphone capture, an AI adapter, an external events adapter, sync, or sharing integration.
+
+The current schema version is `1`. A repository load migrates the persisted record through the schema boundary before use. Local storage is a deliberately constrained MVP store, not a claim of encryption or multi-device sync. The Data manager exposes the full record count, raw inspectable export, reset, and whole-workspace deletion.
 
 | Capability | Interface | Boundary |
 | --- | --- | --- |
