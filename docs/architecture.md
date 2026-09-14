@@ -15,7 +15,9 @@ Friend + interaction repositories <- relationship rules -> explainable next acti
 
 Phase 2 implements a versioned local repository backed by browser local storage. It owns the circle, friends, text notes, interactions, proposed facts, confirmed facts, activities, prompts, plan drafts, privacy settings, fixture reset, JSON export, and deletion cascades. It intentionally does not implement microphone capture, an AI adapter, an external events adapter, sync, or sharing integration.
 
-The current schema version is `1`. A repository load migrates the persisted record through the schema boundary before use. Local storage is a deliberately constrained MVP store, not a claim of encryption or multi-device sync. The Data manager exposes the full record count, raw inspectable export, reset, and whole-workspace deletion.
+The current schema version is `2`. A repository load migrates the persisted record through the schema boundary before use. Local storage is a deliberately constrained MVP store, not a claim of encryption or multi-device sync. The Data manager exposes the full record count, raw inspectable export, reset, and whole-workspace deletion.
+
+Phase 3 raises the workspace schema to `2`: notes declare `manual-text` or future `remote-opt-in` processing and may hold an audio ID. Explicit recordings are stored separately in browser IndexedDB only when the user chooses retained audio; transcript-only mode discards the recording after the editable transcript is saved. See [voice feasibility](voice-transcription-feasibility.md).
 
 | Capability | Interface | Boundary |
 | --- | --- | --- |

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { getFailureFixture, getFixtureWorkspace } from "@/lib/fixtures";
-import { BETA_ACTIVE_FRIEND_LIMIT, LocalWorkspaceRepository, migrateWorkspace, type StorageLike } from "@/lib/workspace";
+import { BETA_ACTIVE_FRIEND_LIMIT, CURRENT_SCHEMA_VERSION, LocalWorkspaceRepository, migrateWorkspace, type StorageLike } from "@/lib/workspace";
 
 class MemoryStorage implements StorageLike {
   private values = new Map<string, string>();
@@ -13,16 +13,22 @@ class MemoryStorage implements StorageLike {
 test("local repository seeds, exports, and resets a versioned workspace", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
-  assert.equal(repository.load().schemaVersion, 1);
+  assert.equal(repository.load().schemaVersion, CURRENT_SCHEMA_VERSION);
   assert.match(repository.export(), /maya-chen/);
   assert.equal(repository.reset().circle, null);
 });
 
 test("a legacy version 0 record migrates through the versioned boundary", () => {
   const migrated = migrateWorkspace({ schemaVersion: 0, city: "Sydney", friends: [] });
-  assert.equal(migrated.schemaVersion, 1);
+  assert.equal(migrated.schemaVersion, CURRENT_SCHEMA_VERSION);
   assert.equal(migrated.city, "Sydney");
-  assert.ok(migrated.migrationHistory.some((migration) => migration.version === 1));
+  assert.ok(migrated.migrationHistory.some((migration) => migration.version === CURRENT_SCHEMA_VERSION));
+});
+
+test("version 1 notes migrate to the explicit manual-transcript processing mode", () => {
+  const migrated = migrateWorkspace({ schemaVersion: 1, notes: [{ id: "legacy-note", text: "Hello", friendIds: [], capturedAt: "2026-09-14T00:00:00.000Z", state: "saved" }] });
+  assert.equal(migrated.schemaVersion, CURRENT_SCHEMA_VERSION);
+  assert.equal(migrated.notes[0].transcriptionMode, "manual-text");
 });
 
 test("a local circle enforces its active-friend capacity", () => {

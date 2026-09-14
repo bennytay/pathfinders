@@ -12,6 +12,8 @@ Raw audio, transcript, fact proposal, confirmed memory, interaction, prompt, act
 
 On-device processing is preferred only when it is technically proven. If any remote fallback is introduced, each note must show what is sent, to which named destination, why it is sent, and the consequence of declining. Processing must not occur until the user gives explicit per-note consent; the consent time and destination must be recorded in a user-visible audit trail.
 
+Phase 3 does not enable any remote transcription. It uses explicit microphone permission and browser-local recording. A user can choose transcript-only behavior or retain audio locally until deletion; no audio is uploaded in either setting.
+
 ## Product limits
 
 No background recording, passive listening, background location collection, contact/DM/social-feed import, automatic outreach, automatic calendar write, or default content telemetry is permitted. Telemetry, if introduced, must be opt-in and exclude note content, transcripts, friend names, and event queries by default.

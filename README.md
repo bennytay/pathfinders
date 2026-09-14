@@ -41,7 +41,7 @@ Read the [product contract](docs/product-contract.md), [privacy model](docs/priv
 
 ## Status
 
-The next milestone is voice-capture and on-device-transcription feasibility. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
+Phase 3 adds optional local voice recording with playback and manual editable transcription. Read the [voice feasibility decision](docs/voice-transcription-feasibility.md). The next milestone is grounded AI memory extraction. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
 
 ## Contributing
 
