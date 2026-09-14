@@ -43,6 +43,8 @@ Read the [product contract](docs/product-contract.md), [privacy model](docs/priv
 
 Phase 3 adds optional local voice recording with playback and manual editable transcription. Read the [voice feasibility decision](docs/voice-transcription-feasibility.md). The next milestone is grounded AI memory extraction. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
 
+Phase 4 has started with a strict offline proposal schema and source-span validation. Read the [grounded extraction contract](docs/grounded-extraction.md).
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md), our [Code of Conduct](CODE_OF_CONDUCT.md), and [security policy](SECURITY.md). Never add real notes, contacts, recordings, access tokens, or personally identifying fixture data to this repository.

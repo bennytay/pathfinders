@@ -24,3 +24,12 @@ test("a user can set up a circle, add a person, and inspect local data", async (
   await expect(page.getByText("All records, local workspace")).toBeVisible();
   await expect(page.getByText("Friends", { exact: true })).toBeVisible();
 });
+
+test("a proposal is visibly source-linked and requires explicit approval", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load synthetic fixture instead" }).click();
+  await page.getByRole("button", { name: "Review" }).click();
+  await expect(page.getByText("Source: “making things” in the linked note.")).toBeVisible();
+  await page.getByRole("button", { name: "Approve as memory" }).click();
+  await expect(page.getByLabel("Edit memory")).toHaveValue("making things");
+});

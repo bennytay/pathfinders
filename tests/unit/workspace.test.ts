@@ -60,3 +60,29 @@ test("deleting a friend cascades their notes, interactions, proposals, memories,
   assert.equal(result.memoryFacts.length, 0);
   assert.equal(result.planDrafts.length, 0);
 });
+
+test("a proposal must be grounded in the source note and approved memories preserve adapter metadata", () => {
+  const repository = new LocalWorkspaceRepository(new MemoryStorage());
+  repository.seed(getFixtureWorkspace());
+  assert.throws(() => repository.addFactProposal({ friendId: "maya-chen", sourceNoteId: "maya-pottery-reflection", type: "preference", value: "invented", sourceSpan: { start: 0, end: 8, text: "invented" }, confidence: 0.4, suggestedIntent: "remember", adapter: "fixture-extractor-v1" }), /source span/);
+  const approved = repository.approveProposal("maya-proposal");
+  assert.equal(approved.memoryFacts[0].adapter, "fixture-extractor-v1");
+  assert.equal(approved.memoryFacts[0].sourceNoteId, "maya-pottery-reflection");
+});
+
+test("confirmed memories can be edited, merged with the same friend, and forgotten", () => {
+  const repository = new LocalWorkspaceRepository(new MemoryStorage());
+  repository.seed(getFixtureWorkspace());
+  repository.approveProposal("maya-proposal");
+  const first = repository.load().memoryFacts[0];
+  repository.addFactProposal({ friendId: "maya-chen", sourceNoteId: "maya-pottery-reflection", type: "preference", value: "making things", sourceSpan: { start: 42, end: 55, text: "making things" }, confidence: 0.5, suggestedIntent: "remember", adapter: "fixture-extractor-v1" });
+  const secondProposal = repository.load().factProposals.find((proposal) => proposal.status === "pending")!;
+  repository.approveProposal(secondProposal.id);
+  const second = repository.load().memoryFacts.find((memory) => memory.id !== first.id)!;
+  const merged = repository.mergeMemories(first.id, second.id);
+  assert.equal(merged.memoryFacts.length, 1);
+  assert.ok(merged.memoryFacts[0].editHistory.includes("making things"));
+  const edited = repository.editMemory(first.id, "making pottery");
+  assert.equal(edited.memoryFacts[0].value, "making pottery");
+  assert.equal(repository.forgetMemory(first.id).memoryFacts.length, 0);
+});
