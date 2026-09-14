@@ -31,5 +31,19 @@ test("a proposal is visibly source-linked and requires explicit approval", async
   await page.getByRole("button", { name: "Review" }).click();
   await expect(page.getByText("Source: “making things” in the linked note.")).toBeVisible();
   await page.getByRole("button", { name: "Approve as memory" }).click();
-  await expect(page.getByLabel("Edit memory")).toHaveValue("making things");
+  await expect(page.getByLabel("Edit memory").first()).toHaveValue("making things");
+});
+
+test("a confirmed memory can lead to an explainable offline plan draft", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Load synthetic fixture instead" }).click();
+  await page.getByRole("button", { name: "Plan" }).click();
+  await expect(page.getByText("Why this appeared")).toBeVisible();
+  await expect(page.getByText(/You chose every 14 days/)).toBeVisible();
+  await page.getByLabel("Draft message").fill("Want to try pottery next week?");
+  await page.getByRole("button", { name: "Save draft, do not send" }).click();
+  await expect(page.getByText("Want to try pottery next week?")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy draft message" })).toBeVisible();
+  await page.getByRole("button", { name: "Record planned" }).click();
+  await expect(page.getByText("planned", { exact: true })).toBeVisible();
 });

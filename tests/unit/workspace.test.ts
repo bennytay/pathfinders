@@ -31,6 +31,12 @@ test("version 1 notes migrate to the explicit manual-transcript processing mode"
   assert.equal(migrated.notes[0].transcriptionMode, "manual-text");
 });
 
+test("version 4 workspaces gain explicit reminder controls without losing records", () => {
+  const migrated = migrateWorkspace({ schemaVersion: 4, friends: [{ id: "friend", displayName: "Sam", cadenceDays: 14, archived: false, createdAt: "2026-09-14T00:00:00.000Z" }], prompts: [{ id: "prompt", friendId: "friend", reason: "A reason", state: "active", generatedAt: "2026-09-14T00:00:00.000Z" }] });
+  assert.equal(migrated.friends[0].promptEnabled, true);
+  assert.equal(migrated.prompts[0].updatedAt, "2026-09-14T00:00:00.000Z");
+});
+
 test("a local circle enforces its active-friend capacity", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.createCircle({ name: "Close circle", city: "Sydney" });
@@ -75,14 +81,15 @@ test("confirmed memories can be edited, merged with the same friend, and forgott
   repository.seed(getFixtureWorkspace());
   repository.approveProposal("maya-proposal");
   const first = repository.load().memoryFacts[0];
-  repository.addFactProposal({ friendId: "maya-chen", sourceNoteId: "maya-pottery-reflection", type: "preference", value: "making things", sourceSpan: { start: 42, end: 55, text: "making things" }, confidence: 0.5, suggestedIntent: "remember", adapter: "fixture-extractor-v1" });
+  repository.addFactProposal({ friendId: "maya-chen", sourceNoteId: "maya-pottery-reflection", type: "preference", value: "making things", sourceSpan: { start: 40, end: 53, text: "making things" }, confidence: 0.5, suggestedIntent: "remember", adapter: "fixture-extractor-v1" });
   const secondProposal = repository.load().factProposals.find((proposal) => proposal.status === "pending")!;
   repository.approveProposal(secondProposal.id);
   const second = repository.load().memoryFacts.find((memory) => memory.id !== first.id)!;
+  const countBeforeMerge = repository.load().memoryFacts.length;
   const merged = repository.mergeMemories(first.id, second.id);
-  assert.equal(merged.memoryFacts.length, 1);
+  assert.equal(merged.memoryFacts.length, countBeforeMerge - 1);
   assert.ok(merged.memoryFacts[0].editHistory.includes("making things"));
   const edited = repository.editMemory(first.id, "making pottery");
   assert.equal(edited.memoryFacts[0].value, "making pottery");
-  assert.equal(repository.forgetMemory(first.id).memoryFacts.length, 0);
+  assert.equal(repository.forgetMemory(first.id).memoryFacts.length, countBeforeMerge - 2);
 });
