@@ -1,0 +1,2 @@
+import { expect, test } from "@playwright/test";
+test("fixture mode presents the privacy-first product contract", async ({ page }) => { await page.goto("/"); await expect(page.getByRole("heading", { level: 1 })).toContainText("Private context"); await expect(page.getByTestId("fixture-mode")).toContainText("Fixture mode is on"); await expect(page.getByText("Synthetic beta fixture")).toBeVisible(); });

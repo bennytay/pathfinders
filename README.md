@@ -1,28 +1,48 @@
-# Circle 🫶
+# InnerCircle
 
-A local-first personal notebook for the people in your uni social orbit. Built for quick night logging, not business networking.
+InnerCircle is a local-first, privacy-first context layer for a deliberately small circle of close friends. It helps a person capture a reflection, review any proposed relationship context, and create an explainable opportunity to meet in person.
 
-## Run it locally
+This repository is at the Phase 1 foundation milestone. Fixture mode is the supported way to run it today: no account, paid service, API key, microphone permission, or network connection is required.
+
+## Quick start
 
 ```bash
-npm install
-npx prisma migrate dev --name init
-npm run db:seed
+npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The demo ships with eight fake UNSW mates and fifteen made-up past hangs.
+Open `http://localhost:3000`. The homepage is labelled fixture mode and uses only synthetic data. It never writes a database or makes a network request.
 
-## Handy commands
+## Verify the foundation
 
 ```bash
-npm run db:seed       # reset and repopulate the demo
-npm run test:helpers  # derived relationship date helpers
-npm run build         # production build check
+npm run lint
+npm run typecheck
+npm test
+npm run build
 ```
 
-Data lives in `prisma/dev.db`, using the `DATABASE_URL` from `.env`. Keep it private, it is intentionally a one-person app with no auth or cloud sync in v1.
+The end-to-end test base uses Playwright. Install its local Chromium binary once, then run it:
 
-## Later: Supabase
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
 
-When you are ready for Postgres, switch the Prisma datasource provider to `postgresql`, point `DATABASE_URL` at Supabase, then run `npx prisma migrate dev`. The models deliberately use portable strings, relations, and `DateTime` values, so no model redesign should be required. Do not add a Supabase client or auth until that migration actually happens.
+## Product and data boundaries
+
+- A close circle is user-created; Phase 1 beta fixtures permit up to five active friends.
+- There is no contact import, social scraping, passive capture, autonomous outreach, calendar write, or relationship score.
+- Raw audio, transcripts, proposals, and confirmed memories are different records. A model may never silently create durable memory.
+- Any future remote processing must be an explicit, per-note opt-in that names its destination. No remote adapter is enabled now.
+- A plan is always an editable draft until a user personally copies or shares it.
+
+Read the [product contract](docs/product-contract.md), [privacy model](docs/privacy-model.md), [threat model](docs/threat-model.md), [architecture](docs/architecture.md), and [contribution guide](docs/contributing.md) before building a feature.
+
+## Status
+
+The next milestone is the local-first domain core. See the [master execution plan](docs/plans/master-execution-plan.md) for the full sequence and deliberately excluded scope.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md), our [Code of Conduct](CODE_OF_CONDUCT.md), and [security policy](SECURITY.md). Never add real notes, contacts, recordings, access tokens, or personally identifying fixture data to this repository.
