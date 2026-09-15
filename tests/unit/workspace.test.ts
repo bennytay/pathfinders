@@ -14,7 +14,7 @@ test("local repository seeds, exports, and resets a versioned workspace", () => 
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
   assert.equal(repository.load().schemaVersion, CURRENT_SCHEMA_VERSION);
-  assert.match(repository.export(), /maya-chen/);
+  assert.match(repository.export(), /priya-shah/);
   assert.equal(repository.reset().circle, null);
 });
 
@@ -57,34 +57,34 @@ test("deleting a friend cascades their notes, interactions, moments, proposals, 
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
   const initial = repository.load();
-  const maya = initial.friends.find((friend) => friend.id === "maya-chen")!;
-  repository.approveProposal("maya-internship-proposal");
-  repository.createPlan({ friendId: maya.id, message: "Want to try pottery?" });
-  const result = repository.deleteFriend(maya.id);
-  assert.equal(result.friends.some((friend) => friend.id === maya.id), false);
-  assert.equal(result.notes.length, 9);
-  assert.equal(result.interactions.length, 9);
+  const priya = initial.friends.find((friend) => friend.id === "priya-shah")!;
+  repository.approveProposal("priya-internship-proposal");
+  repository.createPlan({ friendId: priya.id, message: "Want to try pottery?" });
+  const result = repository.deleteFriend(priya.id);
+  assert.equal(result.friends.some((friend) => friend.id === priya.id), false);
+  assert.equal(result.notes.length, 7);
+  assert.equal(result.interactions.length, 7);
   assert.equal(result.momentCandidates.length, 0);
   assert.equal(result.confirmedHangouts.length, 0);
   assert.equal(result.factProposals.length, 0);
-  assert.equal(result.memoryFacts.length, 9);
+  assert.equal(result.memoryFacts.length, 7);
   assert.equal(result.planDrafts.length, 0);
 });
 
 test("a proposal must be grounded in the source note and approved memories preserve adapter metadata", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
-  assert.throws(() => repository.addFactProposal({ friendId: "maya-chen", sourceNoteId: "maya-bouldering-reflection", type: "preference", value: "invented", sourceSpan: { start: 0, end: 8, text: "invented" }, confidence: 0.4, suggestedIntent: "remember", adapter: "fixture-extractor-v1" }), /source span/);
-  const approved = repository.approveProposal("maya-internship-proposal");
+  assert.throws(() => repository.addFactProposal({ friendId: "priya-shah", sourceNoteId: "priya-bouldering-reflection", type: "preference", value: "invented", sourceSpan: { start: 0, end: 8, text: "invented" }, confidence: 0.4, suggestedIntent: "remember", adapter: "fixture-extractor-v1" }), /source span/);
+  const approved = repository.approveProposal("priya-internship-proposal");
   assert.equal(approved.memoryFacts[0].adapter, "fixture-extractor-v1");
-  assert.equal(approved.memoryFacts[0].sourceNoteId, "maya-bouldering-reflection");
+  assert.equal(approved.memoryFacts[0].sourceNoteId, "priya-bouldering-reflection");
 });
 
 test("confirmed memories can be edited, merged with the same friend, and forgotten", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
   const first = repository.load().memoryFacts[0];
-  repository.approveProposal("maya-internship-proposal");
+  repository.approveProposal("priya-internship-proposal");
   const second = repository.load().memoryFacts.find((memory) => memory.id !== first.id)!;
   const countBeforeMerge = repository.load().memoryFacts.length;
   const merged = repository.mergeMemories(first.id, second.id);
@@ -98,11 +98,11 @@ test("confirmed memories can be edited, merged with the same friend, and forgott
 test("a photo-derived moment is reviewable before it becomes a separately stored hangout", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
-  const candidate = repository.createMomentCandidate({ photo: { assetId: "synthetic-photo", label: "Saturday in Newtown", capturedAt: "2026-09-12T15:30:00.000Z", place: "Newtown", retention: "not-stored" }, candidateFriendIds: ["maya-chen", "ari-singh"], analysisKind: "fixture", analysisLabel: "Synthetic demo detection" });
+  const candidate = repository.createMomentCandidate({ photo: { assetId: "synthetic-photo", label: "Saturday in Newtown", capturedAt: "2026-09-12T15:30:00.000Z", place: "Newtown", retention: "not-stored" }, candidateFriendIds: ["priya-shah", "hana-kim"], analysisKind: "fixture", analysisLabel: "Synthetic demo detection" });
   assert.equal(candidate.momentCandidates[0].status, "pending");
   assert.equal(candidate.confirmedHangouts.length, 0);
   const confirmed = repository.confirmMomentCandidate(candidate.momentCandidates[0].id);
   assert.equal(confirmed.momentCandidates[0].status, "confirmed");
-  assert.deepEqual(confirmed.confirmedHangouts[0].friendIds, ["maya-chen", "ari-singh"]);
-  assert.equal(confirmed.interactions.length, BETA_ACTIVE_FRIEND_LIMIT);
+  assert.deepEqual(confirmed.confirmedHangouts[0].friendIds, ["priya-shah", "hana-kim"]);
+  assert.equal(confirmed.interactions.length, 8);
 });

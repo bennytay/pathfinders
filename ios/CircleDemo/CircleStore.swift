@@ -1,5 +1,7 @@
 import Foundation
 import Combine
+import Photos
+import PhotosUI
 
 final class CircleStore: ObservableObject {
     @Published var friends: [Friend] = CircleStore.demoFriends
@@ -9,6 +11,8 @@ final class CircleStore: ObservableObject {
     @Published var savedNote = "Maya mentioned trying bouldering next week."
     @Published var toast: String?
     @Published var plan: DraftPlan?
+    @Published var recentPhotoCount = 0
+    @Published var importedPhotoCount = 0
 
     var maya: Friend { friends[0] }
 
@@ -18,6 +22,37 @@ final class CircleStore: ObservableObject {
             self?.isScanning = false
             self?.momentFound = true
         }
+    }
+
+    func scanPhotoLibrary() {
+        guard !isScanning else { return }
+        isScanning = true
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard status == .authorized || status == .limited else {
+                    self.isScanning = false
+                    self.showToast("Photo access is needed to check recent photos.")
+                    return
+                }
+                let options = PHFetchOptions()
+                options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                options.fetchLimit = 24
+                self.recentPhotoCount = PHAsset.fetchAssets(with: .image, options: options).count
+                self.isScanning = false
+            }
+        }
+    }
+
+    @MainActor
+    func importPhotos(_ items: [PhotosPickerItem]) async {
+        var imported = 0
+        for item in items {
+            if let _ = try? await item.loadTransferable(type: Data.self) { imported += 1 }
+        }
+        guard imported > 0 else { return }
+        importedPhotoCount += imported
+        showToast("\(imported) photo\(imported == 1 ? "" : "s") added locally.")
     }
 
     func keepMoment() {
@@ -43,6 +78,8 @@ final class CircleStore: ObservableObject {
         isScanning = false
         savedNote = "Maya mentioned trying bouldering next week."
         plan = nil
+        recentPhotoCount = 0
+        importedPhotoCount = 0
         showToast("Demo reset.")
     }
 

@@ -21,7 +21,7 @@ export const fixturePhotoAnalysisAdapter: PhotoAnalysisAdapter = {
   },
   analyze: () => ({
     photo: { assetId: "fixture-saturday-newtown", label: "Saturday afternoon in Newtown", capturedAt: "2026-09-12T15:30:00.000Z", place: "Newtown", retention: "not-stored" },
-    candidateFriendIds: ["maya-chen", "ari-singh"],
+    candidateFriendIds: ["priya-shah", "hana-kim"],
     analysisKind: "fixture",
     analysisLabel: "Synthetic demo detection",
   }),

@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct CircleRootView: View {
     @EnvironmentObject private var store: CircleStore
@@ -106,6 +107,7 @@ struct TodayView: View {
 struct CaptureView: View {
     @EnvironmentObject private var store: CircleStore
     @State private var isRecording = false
+    @State private var selectedPhotos: [PhotosPickerItem] = []
 
     var body: some View {
         NavigationStack {
@@ -118,7 +120,7 @@ struct CaptureView: View {
                     }
 
                     if store.isScanning {
-                        VStack(spacing: 16) { ProgressView().controlSize(.large); Text("Looking through the synthetic demo library…").font(.headline); Text("No real photos are accessed in this demo.").font(.subheadline).foregroundStyle(CirclePalette.muted) }
+                        VStack(spacing: 16) { ProgressView().controlSize(.large); Text("Checking your recent photo library…").font(.headline); Text("Circle only reads the recent-library count until you choose images to add.").font(.subheadline).foregroundStyle(CirclePalette.muted) }
                             .frame(maxWidth: .infinity).padding(.vertical, 46).background(.white.opacity(0.68), in: RoundedRectangle(cornerRadius: 26))
                     } else if store.momentFound {
                         MomentCandidateView()
@@ -126,10 +128,11 @@ struct CaptureView: View {
                         VStack(spacing: 15) {
                             Image(systemName: "photo.on.rectangle.angled").font(.system(size: 34)).foregroundStyle(CirclePalette.violet)
                             Eyebrow("PHOTO LIBRARY")
-                            Text("Looking for shared moments.").font(.title3.bold())
-                            Text("Circle keeps potential hangouts separate until you decide they are real.").multilineTextAlignment(.center).foregroundStyle(CirclePalette.muted)
-                            Button("Check recent photos") { store.scanForMoment() }.buttonStyle(PrimaryButtonStyle())
-                            Text("Uses synthetic photos only.").font(.caption).foregroundStyle(CirclePalette.muted)
+                            Text(store.recentPhotoCount > 0 ? "(store.recentPhotoCount) recent photos, ready when you are." : "Looking for shared moments.").font(.title3.bold())
+                            Text("Circle checks your recent library on this iPhone. Nothing is kept until you choose an image.").multilineTextAlignment(.center).foregroundStyle(CirclePalette.muted)
+                            PhotosPicker(selection: $selectedPhotos, maxSelectionCount: 12, matching: .images) { Label("Add photos", systemImage: "plus") }.buttonStyle(PrimaryButtonStyle())
+                            if store.importedPhotoCount > 0 { Text("(store.importedPhotoCount) photo\(store.importedPhotoCount == 1 ? "" : "s") added locally.").font(.caption).foregroundStyle(CirclePalette.muted) }
+                            Button("Refresh recent photos") { store.scanPhotoLibrary() }.buttonStyle(SecondaryButtonStyle())
                         }.frame(maxWidth: .infinity).padding(24).background(.white.opacity(0.68), in: RoundedRectangle(cornerRadius: 26))
                     }
 
@@ -140,6 +143,10 @@ struct CaptureView: View {
                     }.padding(18).background(CirclePalette.violetSoft.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
                 }.padding(20)
             }.navigationTitle("Capture").navigationBarTitleDisplayMode(.inline)
+                .task { store.scanPhotoLibrary() }
+                .onChange(of: selectedPhotos) { _, photos in
+                    Task { await store.importPhotos(photos) }
+                }
         }
     }
 }
@@ -156,7 +163,7 @@ struct MomentCandidateView: View {
             Text("Was this with Maya and Ari?").font(.title3.bold())
             Text("Saturday, 12 Sep · Newtown").foregroundStyle(CirclePalette.muted)
             HStack { Button("Keep this moment") { store.keepMoment() }.buttonStyle(PrimaryButtonStyle()); Button("Not this one") { store.momentFound = false }.buttonStyle(SecondaryButtonStyle()) }
-            Text("Sample result only. This app has not opened your photo library.").font(.caption).foregroundStyle(CirclePalette.muted)
+            Text("This potential hangout stays separate until you keep it.").font(.caption).foregroundStyle(CirclePalette.muted)
         }.padding(18).background(.white.opacity(0.78), in: RoundedRectangle(cornerRadius: 26))
     }
 }

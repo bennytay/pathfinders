@@ -1,9 +1,9 @@
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 export const BETA_ACTIVE_FRIEND_LIMIT = 10;
 export const LOCAL_WORKSPACE_KEY = "innercircle.workspace";
 
 export type Id = string;
-export type Friend = { id: Id; displayName: string; cadenceDays: number; promptEnabled: boolean; archived: boolean; createdAt: string };
+export type Friend = { id: Id; displayName: string; address?: string; cadenceDays: number; promptEnabled: boolean; archived: boolean; createdAt: string };
 export type Note = { id: Id; text: string; capturedAt: string; friendIds: Id[]; state: "saved"; audioId?: Id; transcriptionMode: "manual-text" | "remote-opt-in" };
 export type Interaction = { id: Id; friendId: Id; kind: "in-person" | "remote"; occurredAt: string; note?: string };
 export type PhotoAnalysisKind = "fixture" | "metadata" | "on-device-recognition" | "user-selection";
@@ -38,6 +38,7 @@ export function migrateWorkspace(input: unknown): WorkspaceState {
     else if (value.schemaVersion === 3) value = migrateV3ToV4(value);
     else if (value.schemaVersion === 4) value = migrateV4ToV5(value);
     else if (value.schemaVersion === 5) value = migrateV5ToV6(value);
+    else if (value.schemaVersion === 6) value = migrateV6ToV7(value);
     else return emptyWorkspace();
   }
   const base = emptyWorkspace();
@@ -49,6 +50,7 @@ function migrateV2ToV3(value: Partial<WorkspaceState>): Partial<WorkspaceState> 
 function migrateV3ToV4(value: Partial<WorkspaceState>): Partial<WorkspaceState> { return { ...value, schemaVersion: 4, memoryFacts: value.memoryFacts?.map((memory) => ({ ...memory, proposalId: memory.sourceNoteId, adapter: "fixture-extractor-v1", confidence: 0 })) ?? [], migrationHistory: [...(value.migrationHistory ?? []), { version: 4, migratedAt: now() }] }; }
 function migrateV4ToV5(value: Partial<WorkspaceState>): Partial<WorkspaceState> { return { ...value, schemaVersion: 5, friends: value.friends?.map((friend) => ({ ...friend, promptEnabled: true })) ?? [], prompts: value.prompts?.map((prompt) => ({ ...prompt, updatedAt: prompt.generatedAt })) ?? [], migrationHistory: [...(value.migrationHistory ?? []), { version: 5, migratedAt: now() }] }; }
 function migrateV5ToV6(value: Partial<WorkspaceState>): Partial<WorkspaceState> { return { ...value, schemaVersion: 6, momentCandidates: [], confirmedHangouts: [], migrationHistory: [...(value.migrationHistory ?? []), { version: 6, migratedAt: now() }] }; }
+function migrateV6ToV7(value: Partial<WorkspaceState>): Partial<WorkspaceState> { return { ...value, schemaVersion: 7, friends: value.friends?.map((friend) => ({ ...friend, address: friend.address ?? "" })) ?? [], migrationHistory: [...(value.migrationHistory ?? []), { version: 7, migratedAt: now() }] }; }
 export const activeFriendCount = (state: WorkspaceState) => state.friends.filter((friend) => !friend.archived).length;
 
 export class LocalWorkspaceRepository {
@@ -60,6 +62,7 @@ export class LocalWorkspaceRepository {
   export(): string { return JSON.stringify(this.load(), null, 2); }
   createCircle(input: { name: string; city: string; maxMembers?: number }): WorkspaceState { const state = this.load(); if (state.circle) throw new Error("A circle already exists."); const maxMembers = Math.min(input.maxMembers ?? BETA_ACTIVE_FRIEND_LIMIT, BETA_ACTIVE_FRIEND_LIMIT); return this.save({ ...state, city: input.city.trim(), circle: { id: makeId("circle"), name: input.name.trim(), maxMembers } }); }
   addFriend(input: { displayName: string; cadenceDays: number }): WorkspaceState { const state = this.load(); if (!state.circle) throw new Error("Create a circle first."); if (activeFriendCount(state) >= state.circle.maxMembers) throw new Error(`This beta circle supports up to ${state.circle.maxMembers} active friends.`); const name = input.displayName.trim(); if (!name) throw new Error("A friend needs a display name."); return this.save({ ...state, friends: [...state.friends, { id: makeId("friend"), displayName: name, cadenceDays: input.cadenceDays, promptEnabled: true, archived: false, createdAt: now() }] }); }
+  updateFriendAddress(friendId: Id, address: string): WorkspaceState { const state = this.load(); return this.save({ ...state, friends: state.friends.map((friend) => friend.id === friendId ? { ...friend, address: address.trim() } : friend) }); }
   createNote(input: { text: string; friendIds: Id[]; capturedAt?: string; audioId?: Id; transcriptionMode?: Note["transcriptionMode"] }): WorkspaceState { const state = this.load(); const text = input.text.trim(); if (!text) throw new Error("Write or transcribe a reflection before saving it."); return this.save({ ...state, notes: [{ id: makeId("note"), text, friendIds: input.friendIds, capturedAt: input.capturedAt ?? now(), state: "saved", audioId: input.audioId, transcriptionMode: input.transcriptionMode ?? "manual-text" }, ...state.notes] }); }
   logInteraction(input: { friendId: Id; occurredAt: string; note?: string; kind?: Interaction["kind"] }): WorkspaceState { const state = this.load(); return this.save({ ...state, interactions: [{ id: makeId("interaction"), friendId: input.friendId, kind: input.kind ?? "in-person", occurredAt: input.occurredAt, note: input.note?.trim() }, ...state.interactions] }); }
   createMomentCandidate(input: Omit<MomentCandidate, "id" | "status" | "createdAt" | "updatedAt">): WorkspaceState { const state = this.load(); if (!input.candidateFriendIds.length) throw new Error("Choose at least one person before saving a moment candidate."); if (input.candidateFriendIds.some((friendId) => !state.friends.some((friend) => friend.id === friendId && !friend.archived))) throw new Error("A moment candidate can only include people in your active Circle."); const timestamp = now(); return this.save({ ...state, momentCandidates: [{ ...input, id: makeId("moment"), status: "pending", createdAt: timestamp, updatedAt: timestamp }, ...state.momentCandidates] }); }

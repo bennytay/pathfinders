@@ -3,31 +3,21 @@
 import { useState } from "react";
 import type { Activity, WorkspaceState } from "@/lib/workspace";
 
-export function EventFeed({ state, onPlan }: { state: WorkspaceState; onPlan: () => void }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const events = state.activities;
-  const selected = events.find((event) => event.id === selectedId);
-  const suggested = selected ? inviteesFor(selected, state) : [];
+const days = ["Mon 16", "Tue 17", "Wed 18", "Thu 19", "Fri 20", "Sat 21", "Sun 22"];
+const hours = ["9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM"];
+const calendarEvents = [
+  { title: "Studio stand-up", day: 0, start: 1, duration: 1, tone: "blue", details: "A focused work block. No action needed." }, { title: "Lunch with Priya", day: 1, start: 3, duration: 1, tone: "rose", details: "Keep the café booking, then take a short walk together." }, { title: "Run club", day: 2, start: 8, duration: 2, tone: "violet", suggested: true, details: "Invite Isla for the 5:30pm beginner loop, then stay for the post-run drink." }, { title: "Dinner at 6", day: 3, start: 9, duration: 2, tone: "orange", details: "A low-key dinner reservation." }, { title: "Design review", day: 4, start: 2, duration: 2, tone: "green", details: "Bring the new flow and leave time for decisions." }, { title: "Open studio", day: 5, start: 5, duration: 2, tone: "blue", details: "Drop in before the clay social begins." }, { title: "Beach walk", day: 6, start: 3, duration: 2, tone: "rose", details: "Meet at the kiosk, then walk north along the water." },
+];
+type Detail = { title: string; location: string; time: string; detail: string; kind: "suggestion" | "event" };
 
-  return <section className="event-feed" aria-label="Events near you">
-    <header className="event-feed-head"><div><p>Tonight in {state.city || "your area"}</p><h1>Find a plan.</h1></div><button className="event-location" type="button">{state.city || "Nearby"}<span aria-hidden="true">⌄</span></button></header>
-    <div className="event-filters" aria-label="Event filters"><button className="active" type="button">For you</button><button type="button">This week</button><button type="button">Free</button><button type="button">Outdoors</button></div>
-    <EventShelf title="Happening soon" events={events.slice(0, 6)} selectedId={selectedId} onSelect={setSelectedId} />
-    <EventShelf title="Make something" events={events.slice(6, 12)} selectedId={selectedId} onSelect={setSelectedId} />
-    <EventShelf title="More around Sydney" events={events.slice(12)} selectedId={selectedId} onSelect={setSelectedId} />
-    {selected && <aside className="invite-sheet" aria-live="polite"><div><span className={`event-thumb theme-${themeFor(selected.id)}`} aria-hidden="true" /><div><strong>{selected.title}</strong><p>Good people for this</p></div></div><div className="invite-people">{suggested.map((friend) => <span key={friend.id} title={friend.displayName}>{initials(friend.displayName)}</span>)}</div><button className="invite-button" onClick={onPlan}>Plan with {suggested[0]?.displayName.split(" ")[0] ?? "friends"}</button></aside>}
+export function EventFeed({ state, onPlan }: { state: WorkspaceState; onPlan: () => void }) {
+  const [selected, setSelected] = useState<Detail | null>(null);
+  return <section className="calendar-workspace" aria-label="Plan">
+    <header className="calendar-header"><div><p className="calendar-kicker">Your week</p><h1>Make room for people.</h1></div><button className="google-calendar-status" type="button" aria-label="Google Calendar sample view"><span aria-hidden="true" />Google Calendar <b>Sample</b></button></header>
+    <section className="weekly-calendar" aria-label="Google Calendar weekly view"><div className="calendar-corner"><button type="button" aria-label="Previous week">‹</button><strong>Sep 16–22</strong><button type="button" aria-label="Next week">›</button></div><div className="calendar-days">{days.map((day, index) => <div className={index === 2 ? "calendar-day-label today" : "calendar-day-label"} key={day}><small>{day.split(" ")[0]}</small><strong>{day.split(" ")[1]}</strong></div>)}</div><div className="calendar-times">{hours.map((hour) => <span key={hour}>{hour}</span>)}</div><div className="calendar-grid" role="grid" aria-label="Week of September 16"><div className="now-line" aria-hidden="true" />{calendarEvents.map((event) => <button key={event.title} className={`calendar-event ${event.tone}${event.suggested ? " ai-suggested" : ""}`} style={{ "--calendar-day": event.day, "--calendar-start": event.start, "--calendar-duration": event.duration } as React.CSSProperties} onClick={() => setSelected({ title: event.suggested ? "AI suggestion: Run club with Isla" : event.title, location: event.suggested ? "Darling Harbour" : "Your calendar", time: `${days[event.day]} · ${hours[event.start]}`, detail: event.details, kind: event.suggested ? "suggestion" : "event" })}>{event.suggested && <i>AI pick</i>}{event.title}</button>)}</div></section>
+    <section className="recommended-events" aria-labelledby="recommended-heading"><div className="recommendations-heading"><div><p className="calendar-kicker">For your circle</p><h2 id="recommended-heading">Events worth doing together</h2></div></div><div className="event-grid">{state.activities.map((event, index) => { const details = event.details ?? "This week"; const people = suggestedPeople(event, state); const names = people.map((friend) => friend.displayName.split(" ")[0]).join(", "); return <button className="event-card" key={event.id} onClick={() => setSelected({ title: event.title, location: event.location ?? "Location to confirm", time: details, detail: `This matches ${names} based on the interests you saved. Pick a time, then make an editable plan draft.`, kind: "event" })}><span className={`event-art theme-${index % 8}`}><span>{event.tags[0] ?? "Plan"}</span></span><strong>{event.title}</strong><small>{event.location ?? "Location to confirm"} · {details}</small><small className="event-fits">Fits {names}</small></button>; })}</div></section>
+    {selected && <aside className="event-detail-sheet" aria-live="polite"><button className="invite-close" onClick={() => setSelected(null)} aria-label="Close event details">×</button>{selected.kind === "suggestion" && <p className="detail-label">AI suggestion</p>}<h2>{selected.title}</h2><p className="detail-meta">{selected.time} · {selected.location}</p><p>{selected.detail}</p><button className="invite-button" onClick={onPlan}>Make a draft</button></aside>}
   </section>;
 }
 
-function EventShelf({ title, events, selectedId, onSelect }: { title: string; events: Activity[]; selectedId: string | null; onSelect: (id: string) => void }) {
-  return <section className="event-shelf"><h2>{title}</h2><div className="event-grid">{events.map((event) => <button className={event.id === selectedId ? "event-card selected" : "event-card"} key={event.id} onClick={() => onSelect(event.id)}><span className={`event-art theme-${themeFor(event.id)}`}><span>{event.tags[0]}</span><b>{event.title}</b></span><strong>{event.title}</strong><small>{event.details} · {event.location}</small></button>)}</div></section>;
-}
-
-function inviteesFor(event: Activity, state: WorkspaceState) {
-  const tags = new Set(event.tags.map((tag) => tag.toLowerCase()));
-  const matched = state.friends.filter((friend) => state.memoryFacts.some((memory) => memory.friendId === friend.id && [...tags].some((tag) => memory.value.toLowerCase().includes(tag) || tag.includes(memory.value.toLowerCase()))));
-  return (matched.length ? matched : state.friends).slice(0, 3);
-}
-
-function themeFor(id: string) { return Math.abs([...id].reduce((total, letter) => total + letter.charCodeAt(0), 0)) % 8; }
-function initials(name: string) { return name.split(" ").map((part) => part[0]).join("").slice(0, 2); }
+function suggestedPeople(event: Activity, state: WorkspaceState) { const matches = state.friends.filter((friend) => state.memoryFacts.some((fact) => fact.friendId === friend.id && event.tags.some((tag) => fact.value.toLowerCase().includes(tag)))); return (matches.length ? matches : state.friends).slice(0, 3); }

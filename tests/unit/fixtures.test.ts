@@ -8,6 +8,6 @@ test("the committed demo fixture is synthetic and contains no recordings", () =>
   assert.deepEqual(validateFixtureWorkspace(workspace), []);
   assert.ok(workspace.friends.length <= BETA_ACTIVE_FRIEND_LIMIT);
 });
-test("fixture reads are isolated from mutation", () => { const first = getFixtureWorkspace(); first.friends[0].displayName = "Changed locally"; assert.equal(getFixtureWorkspace().friends[0].displayName, "Maya Chen"); });
+test("fixture reads are isolated from mutation", () => { const first = getFixtureWorkspace(); first.friends[0].displayName = "Changed locally"; assert.equal(getFixtureWorkspace().friends[0].displayName, "Priya Shah"); });
 test("product boundaries prevent capacity overflow and unreviewed memory", () => { assert.equal(canAddActiveFriend(9), true); assert.equal(canAddActiveFriend(10), false); assert.equal(mayPersistAsMemory({ reviewedByUser: false, sourceNoteId: "note-1" }), false); assert.equal(mayPersistAsMemory({ reviewedByUser: true, sourceNoteId: "note-1" }), true); });
 test("remote processing requires explicit recorded consent and a destination", () => { assert.equal(mayUseRemoteProcessing({ choice: "on-device" }), false); assert.equal(mayUseRemoteProcessing({ choice: "remote-opt-in", destination: "Example processor" }), false); assert.equal(mayUseRemoteProcessing({ choice: "remote-opt-in", destination: "Example processor", consentRecordedAt: "2026-09-14T00:00:00.000Z" }), true); });
