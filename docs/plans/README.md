@@ -1,3 +1,3 @@
-# InnerCircle execution plan
+# Circle execution plan
 
-- [Master execution plan](./master-execution-plan.md) — complete the open-source MVP first, redesign the UX/UI, then optimize and record the demo.
+- [Master execution plan](./master-execution-plan.md): build a real, selected-photo-to-plan demo vertical slice first, then harden it into the privacy-first MVP.

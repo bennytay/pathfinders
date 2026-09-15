@@ -1,4 +1,4 @@
-# InnerCircle product context
+# Circle product context
 
 ## Register
 
@@ -10,7 +10,7 @@ Socially busy people aged 18–30 whose close friendships are spread across digi
 
 ## Product purpose
 
-InnerCircle is a privacy-first, local-first context layer for a user-chosen small circle of close friends. It helps a user capture a reflection, review source-linked context, and make a transparent, editable in-person plan.
+Circle is a privacy-first, local-first assistant for a user-chosen small circle of close friends. It quietly remembers the context a person chooses to give it, then helps create the next real-life interaction.
 
 ## Brand personality
 

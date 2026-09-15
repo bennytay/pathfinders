@@ -1,348 +1,230 @@
-# InnerCircle — Master Execution Plan
+# Circle: Demo-to-MVP Execution Plan
 
-## Strategic order
+## The decision
 
-Build the **open-source MVP** completely first. Then redesign the UX/UI around the working product. Only after the redesigned product is stable should the team optimize a narrow, reliable 60-second demo.
+Circle is **not** an app for managing friendships. It is an AI that gets a person back in the room with people they care about.
 
-```text
-Functional open-source MVP -> UX/UI redesign -> demo optimization and recording
-```
+The product earns its place by doing small pieces of digital remembering and coordination, then getting out of the way. Time spent in Circle is not a success metric. A useful real-life plan, and eventually a self-reported meetup, is.
 
-This order matters: the demo should showcase the real product rather than a throwaway prototype, and its visual language should come from the post-MVP design pass.
-
-## Product definition
-
-**Working name:** InnerCircle
-
-**Promise:** a privacy-first, voice-first context layer for a deliberately small group of close friends. A user captures a thought after an interaction; InnerCircle helps them retain only the context they choose, then creates a transparent, specific opportunity to meet in person.
-
-**Target user:** socially busy 18–30-year-olds whose close friendships are spread across fragmented digital channels and who want more intentional real-life time together.
-
-**Core loop:**
-
-1. Capture a voice or text reflection after seeing, thinking about, or planning with a close friend.
-2. Turn it into user-reviewed, source-linked relationship context.
-3. Track the user’s chosen in-person rhythm for that friend.
-4. Surface one explainable prompt when a catch-up may be meaningful.
-5. Suggest an activity grounded in shared context and create an editable plan draft.
-
-**North-star outcome:** self-reported intentional in-person plans and meetups—not messages sent, reply speed, streaks, or social-graph size.
-
-## Non-negotiable principles
-
-1. **In-person over inbox zero.** The primary output is an opportunity to meet, never a push to clear DMs.
-2. **Small by design.** Start with a user-selected circle of up to 15 people; no discovery network or contact hoovering.
-3. **User ownership.** Every fact is attributable to a source note, reviewable, editable, exportable, and deletable.
-4. **Privacy is behavior, not marketing.** Audio/transcripts remain on device whenever the chosen technical path genuinely supports it. Any remote processing is explicit opt-in per note, with a clear destination disclosure.
-5. **No hidden relationship grades.** Use transparent reminder eligibility and plain-language reasons; never rank friends’ worth.
-6. **No autonomous social agent.** No background recording, automatic outreach, calendar writes, social-media scraping, or claim that a plan has been accepted when it is only a draft.
-7. **Functional first.** The MVP ships with intentionally utilitarian UI; visual redesign begins only after the functional hardening gate.
-
-## Scope boundaries
-
-### MVP includes
-
-- Explicit voice and text capture.
-- Local/on-device transcription if proven viable; a clearly disclosed opt-in remote fallback only if necessary.
-- A user-created close circle, relationship preferences, and manual in-person interaction logging.
-- AI-proposed memory extraction with review, correction, provenance, and deletion.
-- Explainable nudge eligibility based on chosen cadence and real context.
-- Manual activity ideas and a pluggable public-events source.
-- Editable plan drafts that a user copies or shares through their own channel.
-- Local-first data, export/deletion, offline fixture mode, tests, documentation, and public repository hygiene.
-
-### Deliberately excluded from MVP
-
-- DM, contacts, social-feed, or message import.
-- Automatic response suggestions or relationship “lead management.”
-- Passive listening, background location collection, automatic texting, or automatic calendar changes.
-- Venue sponsorship workflows, payments, subscriptions, group coordination, and social discovery.
-- Mental-health/relationship diagnosis or instructing a person to cut someone off.
-
-## System architecture
+This supersedes the previous functional-MVP-first sequence. The new order is:
 
 ```text
-Capture UI -> Note repository -> Transcription adapter -> Extraction adapter
-                                  |                         |
-                                  v                         v
-                            raw transcript             fact proposals
-                                                            |
-                                                     review / edit / reject
-                                                            |
-Friend + interaction repositories <- relationship rules -> explainable next action
-                                                            |
-                               event-provider adapters -> plan draft -> share/copy
+Current working foundation -> convincing, real vertical-slice demo -> harden and widen that slice into the MVP
 ```
 
-Keep components interchangeable from the start:
+The demo must still use the product's actual storage, capture, context, prompt, and planning interfaces. It may use resettable synthetic data and deterministic on-device fixtures. It must never masquerade a fixture, an inferred identity, or a plan draft as a live result, a confirmed person, or a sent invitation.
 
-| Capability | Required interface | MVP implementation principle |
-| --- | --- | --- |
-| Capture | `createNote({audio?, text?, capturedAt})` | Always support text when voice is unavailable. |
-| Transcription | `transcribe(audio) -> transcript` | Select engine only after an on-device feasibility spike. |
-| Extraction | `extract(transcript, friendCandidates) -> FactProposal[]` | Strict schema; no direct persistence to memory. |
-| Relationship rules | `getNextAction(friend, context) -> Prompt?` | Deterministic and explainable. |
-| Events | `findActivities(context, location, timeWindow)` | Manual ideas work even with no network/provider. |
-| Planning | `createPlanDraft(friend, activity, message)` | Sharing is user-initiated, never automatic. |
+## Product thesis and success boundary
 
-Raw audio, transcripts, proposed facts, and confirmed memories must be separate records. A model cannot silently write durable relationship context.
+**Promise:** Circle quietly remembers the context a person chooses to give it, then offers a specific, timely reason to see someone in real life.
 
-## Data model
+**Outcome:** a user moves from a recently shared moment to a concrete, editable plan with almost no admin work.
 
-| Entity | Essential fields | Guardrail |
-| --- | --- | --- |
-| `Circle` | id, name, max_members | Default maximum: 15. |
-| `Friend` | id, display name, preferred cadence, archived | User-created only. |
-| `Note` | id, raw text, optional audio reference, captured time, state | Audio retention is explicitly configurable. |
-| `FactProposal` | friend, type, value, source note, confidence | Never drives prompts before review/approval. |
-| `MemoryFact` | source, edit history, forgotten/deleted time | Editable and deletable at all times. |
-| `Interaction` | friend, in-person/remote, occurred time | In-person is first-class. |
-| `Prompt` | reason inputs, generated time, snooze/dismiss state | Reason is visible to user. |
-| `Activity` | title, place, time, tags, source, retrieved time | Show source/freshness. |
-| `PlanDraft` | friend, activity/idea, message, status | A draft is not an outreach action. |
-| `PrivacyEvent` | processing choice, destination, consent time | User-facing audit trail for external processing. |
+**Not the outcome:** a record of every interaction, a relationship health score, contact frequency, screen time, messages sent, streaks, or a ranked list of friends.
 
-## Reminder policy
+The user controls all durable context. AI can suggest, infer, and assemble; it cannot silently make memory, contact a friend, write to a calendar, or claim a meetup occurred.
 
-There is no universal “friendship health” score. The product calculates a private `prompt_eligibility` state only where the user has configured an in-person rhythm.
+## What changes from the current foundation
+
+The existing local-first manual flow is valuable infrastructure: local data, voice/text capture, reviewed fact proposals, explainable prompts, activity matching, editable plan drafts, fixture mode, export, and deletion already exist. It is currently presented as a workspace with separate Capture, Circle, Review, Plan, Records, and Data Manager views. That presentation makes the user carry too much of the workflow.
+
+The next build should retain those safeguards while changing the product center of gravity.
+
+| Current emphasis | Circle emphasis |
+| --- | --- |
+| "Capture a reflection" and manually select people, date, and channel | "Add a hangout photo" or "Anything worth remembering?" Circle pre-fills what it can and asks for one confirmation. |
+| Manual meetup log | A confirmed photo-detected hangout creates the interaction. Manual logging remains only as a fallback. |
+| Cadence, status, and a list of people | A small number of useful opportunities, each with a human reason to meet. |
+| Voice/text as the main logging task | Voice/text is optional colour after a moment is detected: what mattered, what they mentioned, what could be next. |
+| Review as a destination | Review appears inline only when Circle needs the user to approve what it wants to remember. |
+| Records and data management in primary navigation | Controls remain accessible in settings, but never compete with the connection loop. |
+
+### Language rules
+
+Use: **last saw**, **you both mentioned**, **could be a nice time**, **make a plan**, **not now**, **remind me later**.
+
+Never use: **overdue**, **at risk**, **relationship score**, **health**, **engagement**, **pipeline**, **lead**, **stale**, **days since contact**, or guilt-inducing red/bad states.
+
+Time can explain a suggestion only in combination with real, confirmed context. For example: "You last saw Maya a few weeks ago, and you both mentioned trying bouldering." It should never be shown as a friendship deficit.
+
+## The product loop
 
 ```text
-eligible when:
-  in_person_gap > user_chosen_cadence
-  AND no recent pending plan
-  AND user has not snoozed the reminder
-
-priority = gap_over_cadence + explicit_intention + relevant_confirmed_activity
+Live normally
+  -> select a hangout photo (or add a quick note)
+  -> Circle suggests who / when / place, user confirms or corrects
+  -> optionally say what mattered in a 10-second voice note
+  -> approve any memory worth keeping
+  -> Circle offers one contextual chance to reconnect
+  -> choose or create an activity and edit an invite
+  -> take the plan out of Circle
 ```
 
-Example explanation: “You set a two-week cadence, it has been 19 days since you met Sam, and both of you mentioned bouldering.” The user can adjust cadence, snooze, dismiss, or disable prompts per friend.
+Photos answer **who, when, and potentially where**. Voice or text answers **what mattered**. The user should never need to complete a form merely because the system could not infer a field.
 
-# Phase 1 — Foundation and product contract
+## Non-negotiable privacy and trust boundaries
 
-**Goal:** establish a fresh, open-source-ready application foundation and make the privacy/product boundaries concrete before feature work.
+1. **Start with selected photos.** The first demo and early MVP accept a photo the user intentionally chooses. Do not request broad camera-roll access or describe it as silently scanning the library.
+2. **Confirm, do not assume.** A person, time, place, and hangout are proposals until the user confirms them. A photo containing Maya is not proof that the user met Maya.
+3. **Keep recognition narrow and local.** Any face profile is limited to people the user deliberately adds to Circle, processed on-device where technically possible, inspectable, and deletable. Do not upload a camera roll or biometric template to a model provider.
+4. **Treat face data as sensitive.** Before enabling recognition beyond a closed test, document retention/deletion, get the necessary consent from people whose profiles are enrolled, and complete jurisdiction-specific privacy review. Ship a no-recognition fallback.
+5. **No background location or recording.** EXIF can be read only from the selected photo and must be confirmed before saving. Voice remains user-initiated and has text fallback.
+6. **AI proposes, the user keeps.** Context extracted from a voice note stays a proposal until approved. Only confirmed memories can create future suggestions.
+7. **A plan is a draft.** Copy/share is deliberate; no messages, calendar writes, RSVPs, or attendance claims are automatic.
 
-## Work
+## Milestone 0: Reframe the existing foundation
 
-- Create a fresh application boundary in this repository; retain only tooling that supports the new product.
-- Write the product contract, glossary, non-goals, privacy model, initial threat model, and architecture decision records.
-- Establish the initial beta scope: one user, up to five active friends during testing, one city, and an opt-in event source.
-- Create synthetic fixtures and demo mode. Do not commit real people’s notes, contacts, or recordings.
-- Create contribution standards: license, code of conduct, security policy, issue/PR templates, environment-variable example, and contributor setup.
-- Set up linting, type checks, unit tests, end-to-end test base, and CI.
+**Goal:** make the current product support the new loop before visual polish.
 
-## Exit criteria
+### Build
 
-- A contributor can clone, run fixture mode, and understand data/AI boundaries.
-- The repository contains no private sample data or required paid service to run core flows.
-- Architecture decisions have explicit alternatives and tradeoffs documented.
+- Rename the product surface to **Circle** and update its promise and empty states.
+- Replace the workspace-first primary navigation with three task surfaces: **Today**, **Add a moment**, and **People**. Move review, local data, and privacy controls into contextual views or settings.
+- Add explicit domain records for a `MomentCandidate` and `ConfirmedHangout`, keeping them separate from a note, interaction, photo metadata, and memory fact.
+- Preserve the existing manual text/voice and manual meetup paths as recovery paths, but do not lead with their forms.
+- Change fixture data to the Maya/Ari bouldering scenario and add a one-click reset for it.
+- Add a deterministic capability boundary for photo analysis. The UI must accurately say whether a result is fixture data, metadata, on-device recognition, or a user selection.
 
-# Phase 2 — Local-first domain core
+### Exit criteria
 
-**Goal:** build durable, private product state before microphones, models, or integrations.
+- A fresh user can understand the product without seeing a relationship dashboard or an overdue-style label.
+- Existing export, deletion cascade, source-linking, prompt, and plan-draft tests still pass.
+- The app has a stable, resettable scenario for the demo.
 
-## Work
+## Milestone 1: Build the demo vertical slice
 
-- Implement local repositories, versioned migrations, seed/reset, export, and deletion cascades.
-- Build the close-circle setup, friends, notes, interactions, confirmed facts, proposed facts, activities, prompts, and plans models.
-- Add circle capacity and per-friend cadence settings.
-- Implement text-note capture and manual in-person interaction logging.
-- Add a privacy settings model and user-visible data manager.
-- Build fixtures for happy paths and failure conditions.
+**Goal:** demonstrate the whole Circle promise in 60–75 seconds with one natural scenario.
 
-## Exit criteria
+### Demo frame: mobile first
 
-- A user can create a circle, add people, save text reflections, log a meetup, inspect all records, export data, and fully delete a friend plus linked records.
-- The product works offline in fixture mode.
-- Data lifecycle and deletion tests pass.
+The demo is designed and recorded as a phone experience, not as a desktop app squeezed into a narrow viewport. The canonical recording target is a 390 × 844 CSS-pixel portrait viewport, with the 360-pixel-wide layout treated as the minimum supported demo width.
 
-# Phase 3 — Voice capture and transcription feasibility
+The physical scene is someone leaving a Saturday hangout, looking at their phone while walking home or on the train, then acting on a gentle idea to see someone again later. They have one hand and a few seconds. The UI should therefore feel like a calm sequence of short, obvious decisions, never a dashboard that demands administration.
 
-**Goal:** make voice the natural intake path without making false privacy or reliability claims.
+- **One task per screen.** Today shows one primary opportunity. Add a moment focuses on the selected photo and confirmation. Context, review, activity choice, and invitation drafting each get their own focused mobile screen.
+- **Thumb-first actions.** Put the one primary action in the lower reach zone, use full-width controls, and provide at least 44 × 44 px touch targets. Do not make hover, right-click, dense tables, or side navigation necessary.
+- **Phone-native capture.** Start from a camera/library chooser. Render the selected photo as the anchor, then show editable people, date, and place beneath it. Voice is a single prominent record action, with typing always immediately available.
+- **Progress without process anxiety.** Move forward after each confirmation and allow back/edit at every step. Do not show a multi-step form, completion percentage, or logging checklist.
+- **No dashboard compression.** Records, settings, and privacy controls live behind a lightweight profile/settings entry. People is a short, searchable list or a focused person view, not a desktop-style grid.
+- **Safe mobile states.** Account for the on-screen keyboard, permission prompts, image-import cancellation, offline state, missing metadata, and interrupted recording. Every state must preserve the selected photo and any typed context.
 
-## Work
+The desktop view may remain responsive for development and accessibility, but it is not the demo's source of truth. Build and visually review the demo at phone widths first.
 
-- Implement microphone permission, record/stop, playback, interruption recovery, and a first-class text fallback.
-- Run an on-device transcription spike against at least two viable approaches on representative mobile hardware.
-- Score each approach for short/noisy-note accuracy, latency, model size, battery use, offline behavior, and platform support.
-- Select the on-device adapter only if it meets documented thresholds.
-- If it does not, ship text-first and place any remote transcription behind an explicit per-note consent screen that says exactly what is sent and where.
-- Make audio retention configurable: transcript-only versus retained audio until deletion.
-- Test denial of permissions, offline capture, background interruption, malformed audio, and storage pressure.
+### The demo scope
 
-## Exit criteria
+Use a synthetic, clearly labelled workspace with Maya and Ari already in the user's Circle. The demo starts with a user-selected photo from a Saturday hangout in Newtown. Detection is deterministic fixture data for the recording unless an equivalent local implementation is reliable. It must be labelled in development, but need not expose developer language in the recording when the result is genuinely produced by the selected-photo fixture adapter.
 
-- Voice recordings reliably become editable transcripts under the documented processing mode.
-- Network/storage inspection and automated tests verify the privacy behavior described to users.
-- No core experience is blocked when voice transcription is unavailable.
+1. **Today:** show one opportunity: "See Maya? You last caught up a few weeks ago. You both mentioned trying bouldering." The primary action is **Find something**, not "fix" or "catch up now."
+2. **Add a moment:** select the Saturday photo. Circle presents, "Looks like Maya and Ari, Saturday in Newtown. Add this to Circle?" with **Add**, **Not quite**, and an obvious edit path.
+3. **Add context, optionally:** after confirmation, prompt, "Anything worth remembering?" The user records or types: "Maya wants to try bouldering next week and she just started her internship." The moment is useful even if this step is skipped.
+4. **Review inline:** show concise, editable proposals for Maya's internship and bouldering intent. The user approves only what should be remembered.
+5. **Create the next interaction:** return to Maya's contextual prompt, choose a beginner bouldering option near campus on Thursday, and edit a share-ready invitation. The UI clearly says **Draft, not sent**.
+6. **Close:** return to a calm confirmation: "Thursday plan ready to share." Do not add an engagement feed, streak, or tally.
 
-# Phase 4 — Grounded AI memory extraction
+### Mobile storyboard
 
-**Goal:** transform messy reflections into controlled, attributable context without allowing AI to quietly rewrite a relationship.
+| Time | Phone screen | User action | What it proves |
+| --- | --- | --- | --- |
+| 0–8s | Today | Tap Maya's single contextual opportunity. | Circle offers a reason to meet, not a queue of friendships. |
+| 8–19s | Add a moment | Choose the Saturday hangout photo. Confirm Maya, Ari, Saturday, and Newtown. | The phone does the administrative remembering, while the user stays in control. |
+| 19–30s | What mattered | Hold to record or type a 10-second note about bouldering and Maya's internship. | Voice adds meaning only when there is something worth keeping. |
+| 30–39s | Review | Approve the concise bouldering and internship proposals. | AI suggestions remain visible, editable, and optional. |
+| 39–57s | Find something | Choose a beginner bouldering option near campus for Thursday. | Confirmed context becomes a relevant offline opportunity. |
+| 57–68s | Draft invite | Edit and tap Copy or Share. | Circle hands the plan back to the user; it never messages on their behalf. |
 
-## Work
+### Demo engineering work
 
-- Define a schema for a proposal: referenced friend, fact type, value, temporal qualifier, source span, confidence, and suggested intent.
-- Resolve friend references locally before calling a model; request clarification for ambiguous identity.
-- Implement an offline fixture extractor and a swappable schema-constrained model adapter.
-- Render proposals for review; default to “not saved” until the user approves or explicitly enables an understood auto-approval policy for low-risk categories.
-- Support edit, reject, merge, forget, and delete. Preserve provenance and model metadata without retaining unnecessary provider logs.
-- Test invented facts, ambiguous names, sensitive information, and prompt injection embedded in notes.
+- Implement selected-photo import, thumbnail/local asset handling, EXIF date/place proposal parsing, and a manual correction state. If no metadata is available, show a calm "When was this?" prompt rather than a broken detection state.
+- Build every demo screen from the 390 × 844 portrait viewport outward. Verify the 360-pixel-wide layout, safe-area spacing, keyboard avoidance, touch targets, image-picker cancellation, and permission-return state before desktop refinement.
+- Implement a `PhotoAnalysisAdapter` with a deterministic fixture implementation. Do not couple the UI to a provider or imply production face recognition.
+- Implement inline moment confirmation and optional voice/text context capture.
+- Make confirmed moment data create in-person interaction records only after the user confirms it.
+- Reuse the current guarded extraction, memory review, explainable prompt, activity, and editable plan-draft components behind the new task flow.
+- Add robust empty, cancelled import, unknown person, no-metadata, denied microphone, offline, no-activity, and extraction-failed paths.
+- Add a reset action that clears selected photo assets and restores only synthetic fixture data.
 
-## Exit criteria
+### Demo release gate
 
-- Every durable memory shows its source and can be corrected or removed.
-- No unreviewed AI inference can alter prompt eligibility.
-- Adversarial validation tests pass.
+- [ ] The entire path runs in a fresh browser from one reset action.
+- [ ] The complete recording works at 390 × 844 and remains usable at 360 px wide, with no clipped controls, horizontal scrolling, hover-only actions, or inaccessible bottom actions behind the keyboard/safe area.
+- [ ] The recording uses a real vertical slice, not static screens or a fabricated data jump.
+- [ ] A moment is only recorded after clear confirmation.
+- [ ] A memory is only durable after review/approval.
+- [ ] Photo and recognition language truthfully reflects the active adapter.
+- [ ] The final plan is visibly a user-owned, unsent draft.
+- [ ] Three dry runs complete in 75 seconds or less, including a recovery path for a missing photo metadata or microphone result.
 
-# Phase 5 — In-person planning engine
+## Milestone 2: Turn the demo slice into a private, useful MVP
 
-**Goal:** turn confirmed context into gentle, explainable reasons to meet.
+**Goal:** extend the demonstrated loop to real, repeatable daily use without rebuilding a CRM.
 
-## Work
+### 2A. Capture and moment detection
 
-- Implement the transparent prompt-eligibility policy, snooze/dismiss controls, and reason cards.
-- Add manual activity ideas first; users can create a suggestion with no external data source.
-- Implement a provider interface and one documented public-events adapter.
-- Match activities against confirmed shared interests and explicit intentions only. Add location, time, freshness, no-result, and error handling.
-- Build editable plan drafts and user-initiated copy/share behavior.
-- Record only explicit outcomes: planned, met, not now. Never infer attendance.
+- Support selected-photo import from camera and library with local thumbnail storage and a user-controlled retention choice.
+- Extract available capture time and coarse place from the selected photo locally where feasible. Require correction/confirmation before it becomes a moment.
+- Add multi-person moment confirmation, duplicate detection, manual person selection, and a text-only/manual fallback.
+- Keep voice as the fastest optional way to add meaning after a moment, with editable transcript and text fallback.
+- Run a technical spike for on-device recognition of a very small, user-enrolled Circle. Measure accuracy for the actual phone targets, latency, battery, storage, offline behaviour, false matches, and deletion reliability.
+- Only enable recognition if the spike meets documented thresholds and privacy controls. Otherwise ship the selected-photo, manual-tag flow as the MVP.
 
-## Exit criteria
+### 2B. Context and memory
 
-- A user can go from confirmed memory to an explainable prompt, relevant activity, and shareable plan draft.
-- The complete core loop works offline with manual ideas; the external event provider enhances it but is not a dependency.
+- Evolve extraction around useful planning context: shared interests, explicit invitations, life updates the user chooses to keep, constraints, and temporal qualifiers.
+- Keep source evidence and review inline. High-sensitivity or ambiguous content must request clarification, not be saved.
+- Let a user view, edit, forget, export, and delete a moment, its photo, extracted proposals, and confirmed memories independently.
+- Never use unreviewed context, inferred emotions, or a photo alone to trigger a reconnection opportunity.
 
-# Phase 6 — Functional hardening and MVP release
+### 2C. Today and People
 
-**Goal:** complete the open-source MVP as a trustworthy, reproducible product before visual redesign begins.
+- Make **Today** the default and show at most one to three high-confidence, actionable opportunities. It is not a feed.
+- Each opportunity must answer: why this person, why now, and what could happen next. It includes snooze and not-now controls without guilt copy.
+- Make **People** a calm context view: recent shared moment, confirmed ideas/intentions, and a single "make a plan" path. Do not display scores, rings, ranks, or an overdue queue.
+- Use a transparent eligibility rule: user-enabled reconnect prompts, no pending plan, a sufficient user-chosen time window, and at least one confirmed contextual reason. The context reason is required in UI; time alone is not enough.
+- Allow notification only after the in-app loop proves useful, with per-person opt-in, a plain-language reason, quiet hours, and one-tap disable. Notifications are not required for MVP release.
 
-## Work
+### 2D. Planning and handoff
 
-- Add unit tests for reminder rules, matching, persistence, migration, export/deletion, and extraction validation.
-- Add integration tests for note → transcript → review → memory → prompt → activity → plan.
-- Add end-to-end tests for first run, offline flow, permission denial, failed transcription, no activity results, remote-processing refusal, and full data deletion.
-- Complete the threat model: device loss, shared devices, sync compromise, model-provider disclosure, event-provider tracking, and sensitive-note exposure.
-- Ensure telemetry is opt-in, contains no note content/transcripts/friend names/event queries by default, and is documented.
-- Profile startup, storage growth, low-connectivity behavior, audio/battery impact, and low-end-device performance.
-- Publish README, setup, privacy model, screenshots/GIF, architecture, demo fixture guide, adapter documentation, roadmap, changelog, and contributor docs.
-- Add CI verification, release checklist, example configuration with no secrets, and first-good-issue labels.
+- Make activity discovery optional and resilient: manual idea first, then one user-initiated event/search provider with source, freshness, location, and no-results treatment.
+- Recommend only from confirmed mutual/shared context or an explicit intention, never generic profile assumptions.
+- Keep activity time/place editable. Create a draft message that the user can copy or share through their own channel.
+- Record only user-confirmed outcomes: planned, met, or not now. Do not infer attendance from photos, calendar data, or silence.
 
 ## MVP release gate
 
-- [ ] Every core user flow works in fixture mode without a network connection.
-- [ ] Data is inspectable, exportable, and deletable at note, fact, friend, and whole-workspace levels.
-- [ ] All AI processing behavior is truthful, testable, and visible to the user.
-- [ ] No product surface ranks friends, creates pressure to reply, sends outreach automatically, or gamifies relationships.
-- [ ] A stranger can clone the repository, run the app, understand the privacy contract, and contribute safely.
-- [ ] CI passes lint, type checks, tests, and a production build.
+### Trust and product fit
 
-**Milestone:** Open-source MVP is complete. Freeze functional scope except for defects discovered during the following design work.
+- [ ] Five target users can go from selected moment to plan without a walkthrough and describe Circle as helping them make plans, not manage friends.
+- [ ] No screen contains scores, streaks, ranks, overdue labels, contact quotas, or automated outreach.
+- [ ] Every opportunity has a respectful, human-readable reason and can be snoozed, dismissed, or disabled.
+- [ ] A photo alone never creates a durable interaction, memory, or prompt.
 
-# Phase 7 — UX/UI redesign on top of the finished MVP
+### Privacy and safety
 
-**Goal:** turn the hardened functional product into a calm, clearly human consumer experience.
+- [ ] Photo selection, metadata use, location disclosure, voice recording, and any remote processing each have clear, granular consent and a no-permission fallback.
+- [ ] Any production face-recognition path is on-device, limited to user-enrolled Circle members, deletable, tested, and cleared by the required consent/privacy review. If this bar is not met, recognition remains off.
+- [ ] Notes, photo assets, transcripts, proposals, memories, moments, interactions, prompts, and plans are separately inspectable, exportable, and deletable.
+- [ ] No raw photo, face template, note content, transcript, name, or event query enters analytics by default.
 
-## Work
+### Reliability and release quality
 
-- Audit every functional screen and identify friction, unclear consent decisions, and CRM-like language.
-- Create an information architecture centered on: capture, review, circle, one next action, activity, and plan—not feeds or dashboards full of scores.
-- Define visual tokens, typography, color, spacing, motion, component states, responsive rules, and empty/error/loading states.
-- Redesign the onboarding, voice/text capture, fact review, friend context, prompt reason, activity choice, and plan draft surfaces.
-- Make the distinction between private memory, AI proposal, plan draft, and sent action unmistakable.
-- Run task-based usability sessions with 5–7 target users. Test whether they understand what data stays local, why a reminder appeared, and whether a plan has actually been sent.
-- Complete keyboard, screen-reader, contrast, reduced-motion, touch-target, responsive, and localization-readiness work.
-- Implement the approved design system and regression-test the functional core after each meaningful UI change.
+- [ ] The selected-photo-to-plan flow works with no metadata, unknown faces, a cancelled import, voice denial, offline mode, no activity results, and no recognition capability.
+- [ ] Fixture mode works without a network connection and never contains real people or photos.
+- [ ] Unit, integration, and end-to-end tests cover moment confirmation, duplication, memory approval, prompt eligibility, activity matching, deletion cascades, and plan handoff.
+- [ ] Accessibility meets WCAG AA basics: keyboard and screen-reader paths, visible focus, contrast, touch targets, reduced motion, and clear non-colour status.
+- [ ] Documentation truthfully describes every adapter and its data path, including the difference between selected-photo metadata, fixture detection, on-device recognition, and any optional remote processing.
 
-## Exit criteria
+## Priority order from today
 
-- Users complete capture-to-plan without a walkthrough.
-- Participants describe prompts as respectful and useful rather than transactional or surveillant.
-- Privacy and AI-review choices are understood correctly in usability testing.
-- Accessibility checks pass and all Phase 6 functional tests remain green.
+1. Preserve the current local-first/reviewed-memory foundation.
+2. Rework the IA and copy around **Today → Add a moment → Make a plan**.
+3. Build the selected-photo confirmation slice and deterministic Maya/Ari fixture.
+4. Join optional voice context to that slice, then reuse the existing review and planning engine.
+5. Record and test the 60–75 second demo only once the vertical slice is complete.
+6. Harden capture, context, Today, planning, privacy controls, and deletion into the MVP.
+7. Treat background-library scanning, remote vision, autonomous messaging, calendar writes, social imports, and relationship scoring as out of scope.
 
-# Phase 8 — Optimize the real product for a 60-second demo
+## How we will know it is working
 
-**Goal:** package the now-functional, redesigned MVP into a concise, resilient investor/user demo without creating a separate fake product.
+The leading qualitative signal is: users can describe a concrete plan Circle helped them make, without describing the app as a tracker.
 
-## Demo scenario
-
-Use a resettable, clearly labeled fixture workspace with three close friends:
-
-| Friend | Existing context | Last in-person time | Activity match |
-| --- | --- | --- | --- |
-| Maya Chen | New job is stressful; loves ceramic classes | 24 days ago | Pottery night |
-| Jordan Lee | Training for a half marathon; likes early coffee | 11 days ago | Sunday run + coffee |
-| Eli Park | Loves small live music venues; recently moved | 5 days ago | Local gig |
-
-Hero note:
-
-> “I ran into Maya after work. Her new job has been a lot, and she said she really misses making things. We should finally do that pottery class together soon.”
-
-Expected product behavior: source-linked proposals for Maya, job stress, pottery, and meeting soon; a transparent “24 days since you met” prompt; a pottery-class suggestion; and an editable Thursday plan draft.
-
-## Work
-
-- Create a one-click development/demo reset that seeds only synthetic data.
-- Ensure fixture mode exercises the genuine product interfaces: transcription, extraction, storage, reminder rules, event search, and planning—not a disconnected slideshow.
-- Use a deterministic fixture transcription/extraction response for the final recording only if live processing cannot complete reliably on the recording device. Clearly avoid claims that it is live when it is not.
-- Add robust loading, microphone-denied, no-event, extraction-failed, and offline fallbacks.
-- Strip nonessential paths from the recording route while preserving the authentic feature flow.
-- Test the full script with a fresh browser/device state three times; record a backup take.
-
-## 60-second recording storyboard
-
-| Time | Action | Message |
-| --- | --- | --- |
-| 0–6s | Open the redesigned home: one gentle Maya prompt | This is an intentional inner-circle tool, not another social feed. |
-| 6–17s | Capture the Maya voice note (or clearly labeled reliable demo capture) | Natural, low-effort context enters by voice. |
-| 17–27s | Show transcript and editable, sourced proposals | AI assists; the user remains in control. |
-| 27–37s | Return to Maya’s reason card | “24 days since you met; you both mentioned pottery.” |
-| 37–49s | Open relevant pottery event and edit a plan draft | Context becomes a real-world opportunity. |
-| 49–56s | Save/share-ready Thursday plan and dashboard update | The app creates momentum to meet, not more screen time. |
-| 56–60s | Close with product thesis | “AI to stay human.” |
-
-Suggested narration:
-
-> “After I see someone, I just say what happened. InnerCircle keeps only the context I choose, notices when a friendship could use time together, and gives me a real reason to make a plan. It’s AI to stay human.”
-
-## Demo release gate
-
-- [ ] The demo uses the real MVP code path with synthetic/resettable data.
-- [ ] Every AI output is reviewed or visibly presented as a proposal.
-- [ ] The reminder is explainable and does not rank a friendship.
-- [ ] The event is relevant to confirmed context and clearly sourced.
-- [ ] The plan is visibly a draft until the user shares it.
-- [ ] The sequence completes naturally in 60 seconds on three fresh dry runs.
-- [ ] No copy overstates integrations, automation, privacy, or live AI behavior.
-
-# Phase 9 — Learn, then monetize responsibly
-
-**Goal:** validate human benefit before expanding integrations or commercial surfaces.
-
-## Work
-
-- Run a closed beta with 15–30 opt-in users, each beginning with their own small circle.
-- With consent, collect only product-learning signals: notes captured, proposals approved/rejected, prompts snoozed, plan drafts made, and self-reported meetups. Prefer aggregate reporting.
-- Interview users weekly about whether prompts feel useful, intrusive, or transactional.
-- Fix privacy/control misunderstandings before adding more notifications or data sources.
-- Consider monetization only after benefit is demonstrated: paid encrypted sync/richer optional discovery, followed much later by clearly labeled opt-in venue sponsorship. Sponsors must never access private memories or relationship context.
-
-## Success measures
-
-- Users report that the product helped create more intentional in-person plans.
-- Reminders are more often acted on or positively dismissed than snoozed as anxiety-inducing.
-- Users understand and exercise data controls.
-- The product remains useful without DM imports, aggressive notifications, or a giant social graph.
-
-## Verification matrix
-
-| Risk | Evidence required before release |
-| --- | --- |
-| Audio privacy promise | Network and storage inspection plus automated tests for each processing setting. |
-| Invented AI memory | Schema validation, source display, review/rejection, and adversarial test coverage. |
-| Friend-CRM dynamic | Product/UX review confirms no ranking, quotas, streaks, auto-send, or reply-time pressure. |
-| Irrelevant/stale events | Provider tests for tags, location/time, freshness, no-result, and offline/manual fallback. |
-| Loss of user control | Export and full-deletion integration tests, with clear processing controls. |
-| Offline failure | End-to-end blocked-network test for capture, review, manual activity, and plan drafting. |
-| Design regression | Functional integration/E2E suite remains green after redesign changes. |
-
+Track only privacy-respecting, opt-in, aggregate product-learning signals needed to improve the loop: selected moments confirmed or corrected, optional context added, proposals approved/rejected, opportunities opened/snoozed/dismissed, plan drafts created/shared, and self-reported plans/meetups. Do not collect photo contents, face templates, friend names, notes, transcripts, or event queries by default.

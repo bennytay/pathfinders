@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "InnerCircle — private context for close friends",
-  description: "A local-first, user-controlled context layer for a small circle of close friends.",
+  title: "Circle: more time in the room",
+  description: "A private, local-first way to remember context and make real-life plans with people you care about.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

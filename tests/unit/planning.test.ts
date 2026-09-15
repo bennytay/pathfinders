@@ -20,7 +20,7 @@ test("eligibility is transparent, cadence-based, and ignores unreviewed proposal
   assert.equal(eligible.eligible, true);
   assert.match(eligible.reason, /every 14 days/);
   assert.match(eligible.reason, /23 days since you met/);
-  assert.ok(eligible.relevantContext.includes("do that pottery class together soon"));
+  assert.ok(eligible.relevantContext.includes("try bouldering next week"));
   state.memoryFacts = [];
   assert.deepEqual(getPromptEligibility(state, maya, asOf).relevantContext, []);
 });
@@ -45,7 +45,7 @@ test("activities match only confirmed shared interests or intentions and plan ou
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFixtureWorkspace());
   const maya = repository.load().friends[0];
-  assert.equal(getActivityMatches(repository.load(), maya.id)[0].activity.id, "pottery-night");
+  assert.equal(getActivityMatches(repository.load(), maya.id)[0].activity.id, "beginner-bouldering");
   repository.createPlan({ friendId: maya.id, message: "Want to make pottery?" });
   const plan = repository.load().planDrafts[0];
   assert.equal(repository.recordPlanOutcome(plan.id, "met").planDrafts[0].status, "met");

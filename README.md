@@ -1,8 +1,8 @@
-# InnerCircle
+# Circle
 
-InnerCircle is a local-first, privacy-first context layer for a deliberately small circle of close friends. It helps a person capture a reflection, review any proposed relationship context, and create an explainable opportunity to meet in person.
+Circle is a local-first, privacy-first assistant for a deliberately small circle of close friends. It helps a person keep the context they choose, then creates an explainable opportunity to meet in person. It is not a friendship tracker or personal CRM.
 
-This repository has completed the Phase 5 in-person planning engine. Fixture mode and the full manual planning loop work without an account, paid service, API key, microphone permission, or network connection.
+The working foundation includes local capture, reviewed memory, explainable planning, and a mobile-first Circle shell. Fixture mode and the manual recovery paths work without an account, paid service, API key, microphone permission, or network connection.
 
 ## Quick start
 
@@ -34,6 +34,7 @@ npm run test:e2e
 - A close circle is user-created; Phase 1 beta fixtures permit up to five active friends.
 - There is no contact import, social scraping, passive capture, autonomous outreach, calendar write, or relationship score.
 - Raw audio, transcripts, proposals, and confirmed memories are different records. A model may never silently create durable memory.
+- Moment candidates and confirmed hangouts are also separate records. The current photo result is a clearly labelled synthetic fixture, not photo-library access or face recognition.
 - Any future remote processing must be an explicit, per-note opt-in that names its destination. No remote adapter is enabled now.
 - A plan is always an editable draft until a user personally copies or shares it. The app only records outcomes a user explicitly selects.
 - Prompts are deterministic, explainable, snoozable, dismissible, and can be disabled per friend. They use only chosen cadence, logged in-person time, confirmed context, and explicit plan outcomes.
@@ -42,9 +43,10 @@ Read the [product contract](docs/product-contract.md), [privacy model](docs/priv
 
 ## Status
 
-Phase 3 adds optional local voice recording with playback and manual editable transcription. Phase 4 adds strict offline proposal schema and source-span validation. Read the [voice feasibility decision](docs/voice-transcription-feasibility.md) and [grounded extraction contract](docs/grounded-extraction.md).
+Milestone 0 reframes the app around mobile Today, Add a moment, and People surfaces. It adds separately stored moment candidates and confirmed hangouts, plus a resettable Maya/Ari bouldering fixture. Read the [master execution plan](docs/plans/master-execution-plan.md).
 
-Phase 5 adds transparent reminder reasons, confirmed-context activity matching, editable plan drafts, and an optional user-initiated public-events adapter. Read the [in-person planning contract](docs/in-person-planning.md) and the [master execution plan](docs/plans/master-execution-plan.md).
+The previous foundation adds optional local voice recording with playback and manual editable transcription, strict offline proposal schema and source-span validation, and transparent activity planning. Read the [voice feasibility decision](docs/voice-transcription-feasibility.md), [grounded extraction contract](docs/grounded-extraction.md), and [in-person planning contract](docs/in-person-planning.md).
+
 
 ## Contributing
 
