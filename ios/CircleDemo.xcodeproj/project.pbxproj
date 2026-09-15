@@ -1,0 +1,65 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000011 /* CircleDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* CircleDemoApp.swift */; };
+		A10000000000000000000012 /* CircleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* CircleModels.swift */; };
+		A10000000000000000000013 /* CirclePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* CirclePalette.swift */; };
+		A10000000000000000000014 /* CircleRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* CircleRootView.swift */; };
+		A10000000000000000000015 /* CircleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* CircleStore.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A10000000000000000000001 /* CircleDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleDemoApp.swift; sourceTree = "<group>"; };
+		A10000000000000000000002 /* CircleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleModels.swift; sourceTree = "<group>"; };
+		A10000000000000000000003 /* CirclePalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CirclePalette.swift; sourceTree = "<group>"; };
+		A10000000000000000000004 /* CircleRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleRootView.swift; sourceTree = "<group>"; };
+		A10000000000000000000005 /* CircleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleStore.swift; sourceTree = "<group>"; };
+		A10000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000007 /* CircleDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CircleDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000021 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000031 = {isa = PBXGroup; children = (A10000000000000000000032 /* CircleDemo */, A10000000000000000000033 /* Products */); sourceTree = "<group>"; };
+		A10000000000000000000032 /* CircleDemo */ = {isa = PBXGroup; children = (A10000000000000000000001 /* CircleDemoApp.swift */, A10000000000000000000002 /* CircleModels.swift */, A10000000000000000000003 /* CirclePalette.swift */, A10000000000000000000004 /* CircleRootView.swift */, A10000000000000000000005 /* CircleStore.swift */, A10000000000000000000006 /* Info.plist */); path = CircleDemo; sourceTree = "<group>"; };
+		A10000000000000000000033 /* Products */ = {isa = PBXGroup; children = (A10000000000000000000007 /* CircleDemo.app */); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A10000000000000000000041 /* CircleDemo */ = {isa = PBXNativeTarget; buildConfigurationList = A10000000000000000000042 /* Build configuration list for PBXNativeTarget "CircleDemo" */; buildPhases = (A10000000000000000000043 /* Sources */, A10000000000000000000021 /* Frameworks */, A10000000000000000000044 /* Resources */); buildRules = (); dependencies = (); name = CircleDemo; productName = CircleDemo; productReference = A10000000000000000000007 /* CircleDemo.app */; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000051 /* Project object */ = {isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = { A10000000000000000000041 = { CreatedOnToolsVersion = 16.0; }; }; }; buildConfigurationList = A10000000000000000000052 /* Build configuration list for PBXProject "CircleDemo" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = A10000000000000000000031; productRefGroup = A10000000000000000000033 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (A10000000000000000000041 /* CircleDemo */); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000044 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000043 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000011 /* CircleDemoApp.swift in Sources */, A10000000000000000000012 /* CircleModels.swift in Sources */, A10000000000000000000013 /* CirclePalette.swift in Sources */, A10000000000000000000014 /* CircleRootView.swift in Sources */, A10000000000000000000015 /* CircleStore.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000061 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_OPTIMIZATION_LEVEL = 0; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		A10000000000000000000062 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; ENABLE_STRICT_OBJC_MSGSEND = YES; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; }; name = Release; };
+		A10000000000000000000063 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = ""; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = CircleDemo/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.circle.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; }; name = Debug; };
+		A10000000000000000000064 /* Release */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = ""; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = ""; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = CircleDemo/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.circle.demo; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A10000000000000000000042 /* Build configuration list for PBXNativeTarget "CircleDemo" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000063 /* Debug */, A10000000000000000000064 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A10000000000000000000052 /* Build configuration list for PBXProject "CircleDemo" */ = {isa = XCConfigurationList; buildConfigurations = (A10000000000000000000061 /* Debug */, A10000000000000000000062 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000051 /* Project object */;
+}
