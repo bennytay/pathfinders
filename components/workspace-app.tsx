@@ -3,16 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { clearAudio } from "@/lib/audio-store";
 import { extractFixtureProposals } from "@/lib/extraction";
-import { getFixtureMomentCandidate, getFixtureWorkspace } from "@/lib/fixtures";
+import { getFixturePhotoLibraryScan, getFixtureWorkspace } from "@/lib/fixtures";
 import { LocalWorkspaceRepository, type WorkspaceState } from "@/lib/workspace";
 import { ExtractionReview } from "@/components/extraction-review";
 import { Planning } from "@/components/planning";
 import { VoiceCapture } from "@/components/voice-capture";
 import { EventFeed } from "@/components/event-feed";
-import { PhotoGallery } from "@/components/photo-gallery";
+import { PhotoLibrary } from "@/components/photo-library";
 
 type View = "today" | "moment" | "people" | "settings" | "review" | "plan";
-const displayDate = (value: string) => new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(value));
 
 export function WorkspaceApp() {
   const repo = useRef<LocalWorkspaceRepository | null>(null);
@@ -34,7 +33,7 @@ export function WorkspaceApp() {
     {!state.circle ? <SetupCircle onCreate={(input) => mutate((repository) => repository.createCircle(input), "Your private Circle is ready.")} onFixture={() => resetWorkspace(true)} /> : <>
       <section className="circle-content">
         {view === "today" && <Today state={state} onAddMoment={() => setView("moment")} onPlan={() => setView("plan")} onPeople={() => setView("people")} />}
-        {view === "moment" && <AddMoment state={state} friendName={friendName} onUseFixture={() => mutate((repository) => repository.createMomentCandidate(getFixtureMomentCandidate()), "Circle prepared a synthetic moment for your review.")} onConfirm={(id) => mutate((repository) => repository.confirmMomentCandidate(id), "Moment saved privately. It has not changed a reminder or contacted anyone.")} onDismiss={(id) => mutate((repository) => repository.dismissMomentCandidate(id), "No moment was saved.")} onSaveNote={(input) => mutate((repository) => repository.createNote(input))} />}
+        {view === "moment" && <AddMoment state={state} friendName={friendName} onScan={() => mutate((repository) => repository.scanPhotoLibrary(getFixturePhotoLibraryScan(state.friends)), "Circle scanned your photos and found new moments.")} onSaveNote={(input) => mutate((repository) => repository.createNote(input))} />}
         {view === "people" && <People state={state} onPlan={() => setView("plan")} onAddressUpdate={(id, address) => mutate((repository) => repository.updateFriendAddress(id, address), "Address saved privately on this device.")} />}
         {view === "settings" && <Settings state={state} onBack={() => setView("today")} onReview={() => setView("review")} onFixture={() => resetWorkspace(true)} onReset={() => resetWorkspace()} onExport={() => downloadExport(repo.current!.export())} />}
         {view === "review" && <section className="contextual-page"><BackButton onClick={() => setView("settings")} label="Back to settings" /><ExtractionReview state={state} onExtract={extractNote} onApprove={(id) => mutate((repository) => repository.approveProposal(id), "Memory saved with its source note.")} onReject={(id) => mutate((repository) => repository.rejectProposal(id), "Suggestion rejected. Nothing was saved.")} onDeleteProposal={(id) => mutate((repository) => repository.deleteProposal(id), "Suggestion deleted.")} onEditMemory={(id, value) => mutate((repository) => repository.editMemory(id, value), "Memory updated.")} onForgetMemory={(id) => mutate((repository) => repository.forgetMemory(id), "Memory forgotten.")} onMergeMemories={(primary, duplicate) => mutate((repository) => repository.mergeMemories(primary, duplicate), "Memories merged.")} /></section>}
@@ -52,9 +51,8 @@ function SetupCircle({ onCreate, onFixture }: { onCreate: (input: { name: string
 
 function Today({ state, onPlan }: { state: WorkspaceState; onAddMoment: () => void; onPlan: () => void; onPeople: () => void }) { return <EventFeed state={state} onPlan={onPlan} />; }
 
-function AddMoment({ state, friendName, onUseFixture, onConfirm, onDismiss, onSaveNote }: { state: WorkspaceState; friendName: (id: string) => string; onUseFixture: () => void; onConfirm: (id: string) => void; onDismiss: (id: string) => void; onSaveNote: (input: { text: string; friendIds: string[]; audioId?: string }) => void }) {
-  const candidate = state.momentCandidates.find((item) => item.status === "pending");
-  return <section className="moment-screen capture-screen"><section className="page-heading compact-heading"><h1>Hangouts</h1></section>{candidate ? <section className="moment-candidate detected-moment" aria-labelledby="candidate-heading"><div className="photo-token" aria-hidden="true"><span>Saturday</span><strong>Newtown</strong></div><h2 id="candidate-heading">Was this with {candidate.candidateFriendIds.map(friendName).join(" and ")}?</h2><p>{candidate.photo.capturedAt ? `${displayDate(candidate.photo.capturedAt)}${candidate.photo.place ? ` · ${candidate.photo.place}` : ""}` : "A moment waiting for your review."}</p><div className="button-row"><button className="primary" onClick={() => onConfirm(candidate.id)}>Keep moment</button><button className="secondary" onClick={() => onDismiss(candidate.id)}>Not this one</button></div></section> : <PhotoGallery onSelect={onUseFixture} />}<VoiceCapture retention={state.privacySettings.audioRetention} friendIds={candidate?.candidateFriendIds ?? []} onSaved={({ text: voiceText, audioId, friendIds }) => onSaveNote({ text: voiceText, friendIds, audioId })} /></section>;
+function AddMoment({ state, friendName, onScan, onSaveNote }: { state: WorkspaceState; friendName: (id: string) => string; onScan: () => void; onSaveNote: (input: { text: string; friendIds: string[]; audioId?: string }) => void }) {
+  return <section className="moment-screen capture-screen"><section className="page-heading compact-heading"><h1>Hangouts</h1></section><PhotoLibrary state={state} friendName={friendName} onScan={onScan} /><VoiceCapture retention={state.privacySettings.audioRetention} friendIds={[]} onSaved={({ text: voiceText, audioId, friendIds }) => onSaveNote({ text: voiceText, friendIds, audioId })} /></section>;
 }
 
 function People({ state, onPlan, onAddressUpdate }: { state: WorkspaceState; onPlan: () => void; onAddressUpdate: (id: string, address: string) => void }) {

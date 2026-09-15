@@ -1,7 +1,34 @@
-import { fixturePhotoAnalysisAdapter } from "@/lib/photo-analysis";
-import { BETA_ACTIVE_FRIEND_LIMIT, CURRENT_SCHEMA_VERSION, type WorkspaceState } from "@/lib/workspace";
+import { BETA_ACTIVE_FRIEND_LIMIT, CURRENT_SCHEMA_VERSION, type Friend, type PhotoLibraryEntry, type WorkspaceState } from "@/lib/workspace";
 
 export { BETA_ACTIVE_FRIEND_LIMIT };
+
+const POSTGAME_PHOTO = "/highlights/postgame.jpeg"; // three friends on a curb outside a beach bar at night
+const GO_KARTING_PHOTO = "/highlights/go-karting.jpeg"; // helmeted group selfie at an indoor go-kart raceway
+const CAFE_NIGHT_PHOTO = "/highlights/cafe-night.jpeg"; // cozy cafe table, laptop open to Minecraft
+const SPIKEBALL_PHOTO = "/highlights/spikeball.jpeg"; // four friends playing spikeball at dusk in a park
+const LOUNGE_CANDLES_PHOTO = "/highlights/lounge-candles.jpeg"; // candlelit lounge table, late-night talk
+const BIRTHDAY_DANCE_PHOTO = "/highlights/birthday-dance.jpeg"; // dancing under a birthday banner
+const SUNSET_BASKETBALL_PHOTO = "/highlights/sunset-basketball.jpeg"; // pickup basketball, palm trees, sunset
+const POOL_NIGHT_PHOTO = "/highlights/pool-night.jpeg"; // playing pool at a bar
+const CENTRAL_PARK_PHOTO = "/highlights/central-park.jpeg"; // lying in the grass in Central Park
+const BEACH_SOCCER_PHOTO = "/highlights/beach-soccer.jpeg"; // kicking a ball on the beach at sunset
+
+export function getFixturePhotoLibraryScan(friends: Pick<Friend, "id" | "archived">[]): PhotoLibraryEntry[] {
+  const active = new Set(friends.filter((friend) => !friend.archived).map((friend) => friend.id));
+  const entries: PhotoLibraryEntry[] = [
+    { photo: { assetId: "scan-basketball-priya", label: "Pickup basketball", caption: "One more game before the sun went down.", capturedAt: "2026-09-06T18:30:00.000Z", place: "The Courts", src: SUNSET_BASKETBALL_PHOTO }, candidateFriendIds: ["priya-shah"], noteText: "Synthetic photo-scan: Priya spent the whole game talking about how she wants to try the new bouldering gym.", fact: { type: "intention", value: "wants to try the new bouldering gym" } },
+    { photo: { assetId: "scan-cafe-hana", label: "Late-night coffee", caption: "Coffee that turned into two hours of nothing important.", capturedAt: "2026-09-07T20:00:00.000Z", place: "The Corner Cafe", src: CAFE_NIGHT_PHOTO }, candidateFriendIds: ["hana-kim"], noteText: "Synthetic photo-scan: Hana's hands still had clay on them at the cafe — she's obsessed with ceramics lately.", fact: { type: "preference", value: "obsessed with ceramics lately" } },
+    { photo: { assetId: "scan-dance-arjun", label: "Birthday dance floor", caption: "First one on the dance floor, as usual.", capturedAt: "2026-09-08T21:00:00.000Z", place: "The Birthday Party", src: BIRTHDAY_DANCE_PHOTO }, candidateFriendIds: ["arjun-patel"], noteText: "Synthetic photo-scan: Arjun was first on the dance floor — he can't get enough of live music lately.", fact: { type: "preference", value: "can't get enough of live music lately" } },
+    { photo: { assetId: "scan-lounge-rohan", label: "Candlelit lounge", caption: "Candlelight and a conversation that ran long.", capturedAt: "2026-09-09T22:00:00.000Z", place: "The Lounge", src: LOUNGE_CANDLES_PHOTO }, candidateFriendIds: ["rohan-mehta"], noteText: "Synthetic photo-scan: Rohan kept checking movie times from the table — always up for a good film after.", fact: { type: "preference", value: "always up for a good film after" } },
+    { photo: { assetId: "scan-soccer-isla", label: "Sunset on the beach", caption: "Kicking the ball around until the light was gone.", capturedAt: "2026-09-10T18:00:00.000Z", place: "The Beach", src: BEACH_SOCCER_PHOTO }, candidateFriendIds: ["isla-morgan"], noteText: "Synthetic photo-scan: Isla watched the sunset after and said she wants to make morning runs a regular thing.", fact: { type: "intention", value: "wants to make morning runs a regular thing" } },
+    { photo: { assetId: "scan-postgame-haru", label: "Postgame outside the bar", caption: "Still laughing about it outside the bar after.", capturedAt: "2026-09-11T20:30:00.000Z", place: "The Boardwalk Bar", src: POSTGAME_PHOTO }, candidateFriendIds: ["haru-sato"], noteText: "Synthetic photo-scan: Haru showed up in another incredible thrifted jacket — always hunting for vintage finds.", fact: { type: "shared-interest", value: "hunting for vintage finds" } },
+    { photo: { assetId: "scan-park-tyler", label: "Central Park afternoon", caption: "Flat on our backs, in no rush to leave.", capturedAt: "2026-09-12T14:00:00.000Z", place: "Central Park", src: CENTRAL_PARK_PHOTO }, candidateFriendIds: ["tyler-woodward"], noteText: "Synthetic photo-scan: Tyler had his sketchbook out in the grass — back into drawing again.", fact: { type: "preference", value: "back into drawing again" } },
+    { photo: { assetId: "scan-karting-yingying", label: "Go-kart night", caption: "One more lap before we called it a night.", capturedAt: "2026-09-13T16:00:00.000Z", place: "The Go-Kart Track", src: GO_KARTING_PHOTO }, candidateFriendIds: ["yingying-zhang"], noteText: "Synthetic photo-scan: Yingying spent the whole ride recommending books between laps.", fact: { type: "shared-interest", value: "recommending books between laps" } },
+    { photo: { assetId: "scan-spikeball-priya-isla", label: "Spikeball in the park", caption: "Nobody wanted to admit they were losing.", capturedAt: "2026-09-13T19:00:00.000Z", place: "The Park", src: SPIKEBALL_PHOTO }, candidateFriendIds: ["isla-morgan", "priya-shah"], noteText: "Synthetic photo-scan: Isla dove for every point — she's really back into her movement classes lately.", fact: { type: "shared-interest", value: "back into her movement classes lately" } },
+    { photo: { assetId: "scan-pool-rohan-tyler", label: "Pool at the bar", caption: "Down two games, still talking trash.", capturedAt: "2026-09-14T21:30:00.000Z", place: "The Pool Hall", src: POOL_NIGHT_PHOTO }, candidateFriendIds: ["rohan-mehta", "tyler-woodward"], noteText: "Synthetic photo-scan: Rohan already picked the place for dinner after — always suggests where to get dinner.", fact: { type: "shared-interest", value: "always suggests where to get dinner" } },
+  ];
+  return entries.filter((entry) => entry.candidateFriendIds.every((friendId) => active.has(friendId)));
+}
 
 export function getFixtureWorkspace(): WorkspaceState {
   const friendSeed = [
@@ -33,11 +60,9 @@ export function getFixtureWorkspace(): WorkspaceState {
     factProposals: [{ id: "priya-internship-proposal", friendId: "priya-shah", sourceNoteId: "priya-bouldering-reflection", type: "preference", value: "started her internship", sourceSpan: { start: 77, end: 99, text: "started her internship" }, confidence: 0.72, suggestedIntent: "remember", adapter: "fixture-extractor-v1", status: "pending", createdAt: "2026-08-21T08:30:00.000Z" }], memoryFacts,
     activities: activities.map(([id, title, details, location, tags]) => ({ id, title, details, location, source: "fixture" as const, retrievedAt: "2026-09-14T08:30:00.000Z", tags: [...tags] })),
     prompts: [], planDrafts: [],
-    privacySettings: { audioRetention: "transcript-only", telemetryOptIn: false, remoteProcessingDefault: "ask-every-note", updatedAt: "2026-09-14T08:30:00.000Z" }, migrationHistory: [{ version: CURRENT_SCHEMA_VERSION, migratedAt: "2026-09-14T08:30:00.000Z" }],
+    privacySettings: { audioRetention: "transcript-only", telemetryOptIn: false, remoteProcessingDefault: "ask-every-note", updatedAt: "2026-09-14T08:30:00.000Z" }, photoLibrary: { granted: false }, migrationHistory: [{ version: CURRENT_SCHEMA_VERSION, migratedAt: "2026-09-14T08:30:00.000Z" }],
   };
 }
-
-export function getFixtureMomentCandidate() { return fixturePhotoAnalysisAdapter.analyze(); }
 
 export function getFailureFixture(): WorkspaceState { const state = getFixtureWorkspace(); return { ...state, friends: Array.from({ length: BETA_ACTIVE_FRIEND_LIMIT }, (_, index) => ({ id: `fixture-${index}`, displayName: `Fixture friend ${index + 1}`, cadenceDays: 14, promptEnabled: true, archived: false, createdAt: "2026-09-14T08:30:00.000Z" })), notes: [], interactions: [], momentCandidates: [], confirmedHangouts: [], factProposals: [], memoryFacts: [] }; }
 export function validateFixtureWorkspace(workspace: WorkspaceState): string[] { const issues: string[] = []; if (!workspace.fixtureMode) issues.push("Fixture workspaces must be marked synthetic."); if (workspace.friends.length > BETA_ACTIVE_FRIEND_LIMIT) issues.push(`Fixture exceeds the beta limit of ${BETA_ACTIVE_FRIEND_LIMIT} active friends.`); if (workspace.notes.some((note) => !note.text.includes("Synthetic"))) issues.push("Fixtures must make synthetic notes obvious."); if (workspace.momentCandidates.some((moment) => moment.analysisKind !== "fixture")) issues.push("Fixture moments must identify their synthetic analysis source."); return issues; }

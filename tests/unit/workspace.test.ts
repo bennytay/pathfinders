@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getFailureFixture, getFixtureWorkspace } from "@/lib/fixtures";
+import { getFailureFixture, getFixturePhotoLibraryScan, getFixtureWorkspace } from "@/lib/fixtures";
 import { BETA_ACTIVE_FRIEND_LIMIT, CURRENT_SCHEMA_VERSION, LocalWorkspaceRepository, migrateWorkspace, type StorageLike } from "@/lib/workspace";
 
 class MemoryStorage implements StorageLike {
@@ -105,4 +105,20 @@ test("a photo-derived moment is reviewable before it becomes a separately stored
   assert.equal(confirmed.momentCandidates[0].status, "confirmed");
   assert.deepEqual(confirmed.confirmedHangouts[0].friendIds, ["priya-shah", "hana-kim"]);
   assert.equal(confirmed.interactions.length, 8);
+});
+
+test("scanning the photo library immediately surfaces highlights as kept moments with remembered context", () => {
+  const repository = new LocalWorkspaceRepository(new MemoryStorage());
+  const seeded = repository.seed(getFixtureWorkspace());
+  assert.equal(seeded.photoLibrary.granted, false);
+  const scanned = repository.scanPhotoLibrary(getFixturePhotoLibraryScan(seeded.friends));
+  assert.equal(scanned.photoLibrary.granted, true);
+  const highlight = scanned.momentCandidates.find((candidate) => candidate.candidateFriendIds.includes("hana-kim"))!;
+  assert.equal(highlight.status, "confirmed");
+  assert.ok(scanned.confirmedHangouts.some((hangout) => hangout.momentCandidateId === highlight.id));
+  const linkedProposal = scanned.factProposals.find((proposal) => highlight.factProposalIds?.includes(proposal.id))!;
+  assert.equal(linkedProposal.status, "approved");
+  assert.ok(scanned.memoryFacts.some((memory) => memory.value === linkedProposal.value && memory.friendId === "hana-kim"));
+  const rescanned = repository.scanPhotoLibrary(getFixturePhotoLibraryScan(seeded.friends));
+  assert.equal(rescanned.momentCandidates.filter((candidate) => candidate.candidateFriendIds.includes("hana-kim")).length, 1, "re-scanning is idempotent");
 });

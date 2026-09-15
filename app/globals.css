@@ -50,14 +50,20 @@ body, .circle-shell { background: var(--canvas); color: var(--ink); font-family:
 @media (max-width: 699px) { .circle-shell { width: min(100%, 34rem); padding-right: .8rem; padding-left: .8rem; }.calendar-workspace { padding: .25rem 0 7.5rem; }.calendar-header { margin-bottom: 1rem; }.calendar-header h1 { max-width: 10ch; font-size: 2rem; line-height: .98; }.google-calendar-status { padding: .45rem .58rem; font-size: .67rem; }.weekly-calendar { grid-template-columns: 2.45rem minmax(0, 1fr); grid-template-rows: 3.25rem 16rem; overflow: hidden; border-radius: .7rem; }.calendar-corner { gap: 0; padding: 0; }.calendar-corner strong { display: none; }.calendar-corner button { width: 1rem; font-size: .8rem; }.calendar-days { min-width: 0; }.calendar-day-label { min-width: 0; }.calendar-day-label small { font-size: .47rem; }.calendar-day-label strong { width: 1.35rem; height: 1.35rem; font-size: .65rem; }.calendar-times { font-size: .48rem; }.calendar-times span { padding-right: .25rem; }.calendar-grid { min-width: 0; }.calendar-event { overflow: hidden; margin: .08rem .05rem; border-radius: .2rem; padding: .16rem .1rem; font-size: .48rem; line-height: 1.15; word-break: break-word; }.calendar-event.ai-suggested i { font-size: .38rem; }.now-line::before { width: .32rem; height: .32rem; }.recommended-events { margin-top: 1.8rem; }.recommendations-heading h2 { font-size: 1.18rem; }.recommendation-list { gap: .55rem; margin-top: .75rem; }.recommendation-row { padding: .58rem; }.recommendation-date { width: 3rem; min-height: 3rem; }.event-detail-sheet { right: 1rem; bottom: 5.2rem; left: 1rem; } }
 @media (prefers-reduced-motion: reduce) { .calendar-event.ai-suggested { animation: none; } }
 
-/* Hangouts: infinite horizontal carousel with a book-fold accordion effect */
-.hangout-carousel { position: relative; height: 15.5rem; margin: 0 -1rem; perspective: 1400px; touch-action: pan-y; user-select: none; }
-.carousel-card { position: absolute; top: 50%; left: 50%; overflow: hidden; width: 9.25rem; height: 12rem; margin: -6rem 0 0 -4.625rem; border: 0; border-radius: 1.1rem; background-position: center; background-size: cover; box-shadow: 0 18px 40px oklch(.05 .02 285 / .45); color: oklch(.98 .008 300); cursor: pointer; }
-.carousel-card::after { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, transparent 45%, oklch(.08 .02 285 / .78)); content: ""; }
-.carousel-card.is-center { box-shadow: 0 22px 48px oklch(.05 .02 285 / .55); }
-.carousel-card span { position: absolute; z-index: 1; right: .7rem; bottom: .65rem; left: .7rem; font-size: .76rem; font-weight: 800; text-align: left; }
-.gallery-hint { margin: .8rem 0 0; color: var(--muted); text-align: center; }
-@media (prefers-reduced-motion: reduce) { .carousel-card { transition: none !important; } }
+/* Hangouts: a full-screen, auto-cycling highlight reel */
+.highlight-reel { display: grid; gap: 1rem; }
+.highlight-frame { position: relative; height: 62dvh; margin: 0 -1rem; overflow: hidden; border-radius: 1.3rem; background-position: center; background-size: cover; background-color: oklch(.2 .02 285); cursor: pointer; box-shadow: 0 18px 40px oklch(.05 .02 285 / .4); }
+.highlight-frame::after { position: absolute; inset: 0; background: linear-gradient(200deg, transparent 42%, oklch(.04 .01 285 / .9) 97%); content: ""; }
+.highlight-dots { position: absolute; top: 1rem; right: 1rem; left: 1rem; z-index: 1; display: flex; gap: .3rem; }
+.highlight-dots span { height: .2rem; flex: 1; border-radius: 999px; background: oklch(1 .01 300 / .32); }
+.highlight-dots span.active { background: oklch(1 .01 300 / .92); }
+.highlight-rescan { position: absolute; top: 1.55rem; right: 1rem; z-index: 1; display: grid; width: 2.15rem; height: 2.15rem; place-items: center; border: 0; border-radius: 50%; background: oklch(.1 .02 285 / .55); color: oklch(.98 .01 300); backdrop-filter: blur(6px); }
+.highlight-rescan svg { width: 1.05rem; height: 1.05rem; }
+.highlight-caption { position: absolute; right: 1.1rem; bottom: 1.1rem; left: 1.1rem; z-index: 1; }
+.highlight-quote { margin: 0 0 .35rem; color: oklch(.99 .008 300); font-family: var(--font-caption), Georgia, serif; font-size: 1.55rem; font-style: italic; font-weight: 600; line-height: 1.2; text-shadow: 0 2px 18px oklch(.02 .01 285 / .6); }
+.highlight-meta { margin: 0; color: oklch(.92 .012 300 / .88); font-size: .78rem; font-weight: 700; letter-spacing: .01em; }
+.highlight-actions { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .highlight-frame { transition: none !important; } }
 
 /* Plan: full event grid with who-to-go-with suggestions, below the compact calendar */
 .event-card small.event-fits { margin-top: .3rem; color: var(--violet-deep); font-weight: 730; white-space: normal; }
@@ -76,3 +82,8 @@ body, .circle-shell { background: var(--canvas); color: var(--ink); font-family:
 @keyframes person-in { to { opacity: 1; transform: translateY(0); } }
 @media (hover: none) { .mosaic-person:hover .mosaic-photo, .mosaic-person:hover .mosaic-badge { transform: none; } .mosaic-person:active .mosaic-photo { transform: scale(.96); } }
 @media (prefers-reduced-motion: reduce) { .mosaic-person { animation: none; opacity: 1; transform: none; } .mosaic-photo, .mosaic-badge { transition: none; } }
+
+/* Capture: voice note button floats bottom-right, above the highlight reel */
+.voice-capture { position: fixed; z-index: 25; right: max(1.1rem, calc((100vw - 34rem) / 2 + 1.1rem)); bottom: calc(5.6rem + env(safe-area-inset-bottom)); display: grid; justify-items: end; gap: .55rem; margin: 0; }
+.voice-status, .spoken-preview { max-width: 12rem; margin: 0; border-radius: .8rem; background: oklch(.12 .02 285 / .82); padding: .5rem .65rem; color: oklch(.96 .01 300); font-size: .74rem; line-height: 1.35; text-align: right; backdrop-filter: blur(6px); }
+.spoken-preview { font-style: italic; }

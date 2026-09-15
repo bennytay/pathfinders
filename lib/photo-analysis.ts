@@ -1,4 +1,4 @@
-import type { MomentCandidate, PhotoAnalysisKind } from "@/lib/workspace";
+import type { PhotoAnalysisKind } from "@/lib/workspace";
 
 export type PhotoAnalysisCapability = {
   kind: PhotoAnalysisKind;
@@ -7,29 +7,16 @@ export type PhotoAnalysisCapability = {
   available: boolean;
 };
 
-export type PhotoAnalysisAdapter = {
-  readonly capability: PhotoAnalysisCapability;
-  analyze(): Omit<MomentCandidate, "id" | "status" | "createdAt" | "updatedAt">;
-};
-
-export const fixturePhotoAnalysisAdapter: PhotoAnalysisAdapter = {
-  capability: {
-    kind: "fixture",
-    label: "Synthetic demo detection",
-    privacyDescription: "This resettable example uses synthetic results. Circle has not accessed a camera roll, uploaded a photo, or recognised a face.",
-    available: true,
-  },
-  analyze: () => ({
-    photo: { assetId: "fixture-saturday-newtown", label: "Saturday afternoon in Newtown", capturedAt: "2026-09-12T15:30:00.000Z", place: "Newtown", retention: "not-stored" },
-    candidateFriendIds: ["priya-shah", "hana-kim"],
-    analysisKind: "fixture",
-    analysisLabel: "Synthetic demo detection",
-  }),
-};
-
-export const unavailablePhotoAnalysisCapability: PhotoAnalysisCapability = {
+export const notGrantedPhotoLibraryCapability: PhotoAnalysisCapability = {
   kind: "user-selection",
-  label: "Photo moments are not enabled yet",
-  privacyDescription: "Circle has not asked for access to your photo library and cannot recognise anyone from your photos.",
+  label: "Photo library scan is not enabled yet",
+  privacyDescription: "Circle has not been given access to your photo library and cannot recognise anyone from your photos.",
   available: false,
+};
+
+export const fixturePhotoLibraryCapability: PhotoAnalysisCapability = {
+  kind: "fixture",
+  label: "Synthetic photo-library scan",
+  privacyDescription: "This resettable demo simulates scanning a photo library on this device, matching photos against the reference photo already on each friend's profile. No real photo library is accessed and nothing leaves this device.",
+  available: true,
 };
