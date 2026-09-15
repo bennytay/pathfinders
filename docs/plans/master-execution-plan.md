@@ -32,10 +32,10 @@ The next build should retain those safeguards while changing the product center 
 
 | Current emphasis | Circle emphasis |
 | --- | --- |
-| "Capture a reflection" and manually select people, date, and channel | "Add a hangout photo" or "Anything worth remembering?" Circle pre-fills what it can and asks for one confirmation. |
-| Manual meetup log | A confirmed photo-detected hangout creates the interaction. Manual logging remains only as a fallback. |
+| "Capture a reflection" and manually select people, date, and channel | A consented photo-library scan proposes a possible hangout, then asks for one confirmation. |
+| Manual meetup log | A confirmed photo-detected hangout creates the interaction. There is no manual circle-management surface. |
 | Cadence, status, and a list of people | A small number of useful opportunities, each with a human reason to meet. |
-| Voice/text as the main logging task | Voice/text is optional colour after a moment is detected: what mattered, what they mentioned, what could be next. |
+| Voice/text as the main logging task | Voice is optional colour after a moment is detected: what mattered, what they mentioned, what could be next. The user never types on this surface. |
 | Review as a destination | Review appears inline only when Circle needs the user to approve what it wants to remember. |
 | Records and data management in primary navigation | Controls remain accessible in settings, but never compete with the connection loop. |
 
@@ -51,7 +51,7 @@ Time can explain a suggestion only in combination with real, confirmed context. 
 
 ```text
 Live normally
-  -> select a hangout photo (or add a quick note)
+  -> Circle passively proposes a possible hangout from the consented photo library
   -> Circle suggests who / when / place, user confirms or corrects
   -> optionally say what mattered in a 10-second voice note
   -> approve any memory worth keeping
@@ -60,15 +60,15 @@ Live normally
   -> take the plan out of Circle
 ```
 
-Photos answer **who, when, and potentially where**. Voice or text answers **what mattered**. The user should never need to complete a form merely because the system could not infer a field.
+Photos answer **who, when, and potentially where**. Voice answers **what mattered**. The user should never need to type or complete a form merely because the system could not infer a field.
 
 ## Non-negotiable privacy and trust boundaries
 
-1. **Start with selected photos.** The first demo and early MVP accept a photo the user intentionally chooses. Do not request broad camera-roll access or describe it as silently scanning the library.
+1. **Photo-library access is explicit and native-only.** After a user grants the platform’s photo-library permission, the native scanner may inspect local photo metadata and run approved on-device analysis across the library. The browser build must not claim this capability and must show the limitation plainly.
 2. **Confirm, do not assume.** A person, time, place, and hangout are proposals until the user confirms them. A photo containing Maya is not proof that the user met Maya.
 3. **Keep recognition narrow and local.** Any face profile is limited to people the user deliberately adds to Circle, processed on-device where technically possible, inspectable, and deletable. Do not upload a camera roll or biometric template to a model provider.
 4. **Treat face data as sensitive.** Before enabling recognition beyond a closed test, document retention/deletion, get the necessary consent from people whose profiles are enrolled, and complete jurisdiction-specific privacy review. Ship a no-recognition fallback.
-5. **No background location or recording.** EXIF can be read only from the selected photo and must be confirmed before saving. Voice remains user-initiated and has text fallback.
+5. **No background location or recording.** Photo metadata is processed locally and must be confirmed before saving. Voice remains user-initiated; speech becomes a transcript without a typing fallback on the hangout surface.
 6. **AI proposes, the user keeps.** Context extracted from a voice note stays a proposal until approved. Only confirmed memories can create future suggestions.
 7. **A plan is a draft.** Copy/share is deliberate; no messages, calendar writes, RSVPs, or attendance claims are automatic.
 
@@ -81,7 +81,7 @@ Photos answer **who, when, and potentially where**. Voice or text answers **what
 - Rename the product surface to **Circle** and update its promise and empty states.
 - Replace the workspace-first primary navigation with three task surfaces: **Today**, **Add a moment**, and **People**. Move review, local data, and privacy controls into contextual views or settings.
 - Add explicit domain records for a `MomentCandidate` and `ConfirmedHangout`, keeping them separate from a note, interaction, photo metadata, and memory fact.
-- Preserve the existing manual text/voice and manual meetup paths as recovery paths, but do not lead with their forms.
+- Remove the manual “manage your circle” and text-entry paths from the primary product. Keep deletion and data controls only in Settings.
 - Change fixture data to the Maya/Ari bouldering scenario and add a one-click reset for it.
 - Add a deterministic capability boundary for photo analysis. The UI must accurately say whether a result is fixture data, metadata, on-device recognition, or a user selection.
 
@@ -103,10 +103,10 @@ The physical scene is someone leaving a Saturday hangout, looking at their phone
 
 - **One task per screen.** Today shows one primary opportunity. Add a moment focuses on the selected photo and confirmation. Context, review, activity choice, and invitation drafting each get their own focused mobile screen.
 - **Thumb-first actions.** Put the one primary action in the lower reach zone, use full-width controls, and provide at least 44 × 44 px touch targets. Do not make hover, right-click, dense tables, or side navigation necessary.
-- **Phone-native capture.** Start from a camera/library chooser. Render the selected photo as the anchor, then show editable people, date, and place beneath it. Voice is a single prominent record action, with typing always immediately available.
+- **Phone-native capture.** The Hangout Radar is a single no-scroll screen. It surfaces one local-library proposal, requests a simple keep/not-this-one confirmation, and offers one prominent microphone action for optional context. No keyboard, text field, or manual people/date form appears here.
 - **Progress without process anxiety.** Move forward after each confirmation and allow back/edit at every step. Do not show a multi-step form, completion percentage, or logging checklist.
 - **No dashboard compression.** Records, settings, and privacy controls live behind a lightweight profile/settings entry. People is a short, searchable list or a focused person view, not a desktop-style grid.
-- **Safe mobile states.** Account for the on-screen keyboard, permission prompts, image-import cancellation, offline state, missing metadata, and interrupted recording. Every state must preserve the selected photo and any typed context.
+- **Safe mobile states.** Account for photo-library permission, no eligible photos, offline state, missing metadata, unavailable speech recognition, and interrupted recording. Every state must retain its candidate without claiming a detection occurred.
 
 The desktop view may remain responsive for development and accessibility, but it is not the demo's source of truth. Build and visually review the demo at phone widths first.
 
@@ -134,10 +134,10 @@ Use a synthetic, clearly labelled workspace with Maya and Ari already in the use
 
 ### Demo engineering work
 
-- Implement selected-photo import, thumbnail/local asset handling, EXIF date/place proposal parsing, and a manual correction state. If no metadata is available, show a calm "When was this?" prompt rather than a broken detection state.
+- Implement a native, permission-gated photo-library adapter that can enumerate local assets without upload, process them on device, and yield reviewable hangout proposals. Retain references/thumbnails only as configured by the user; never persist face templates.
 - Build every demo screen from the 390 × 844 portrait viewport outward. Verify the 360-pixel-wide layout, safe-area spacing, keyboard avoidance, touch targets, image-picker cancellation, and permission-return state before desktop refinement.
 - Implement a `PhotoAnalysisAdapter` with a deterministic fixture implementation. Do not couple the UI to a provider or imply production face recognition.
-- Implement inline moment confirmation and optional voice/text context capture.
+- Implement inline moment confirmation and optional voice-only context capture. Speech recognition must disclose its data path and fail gracefully when unavailable.
 - Make confirmed moment data create in-person interaction records only after the user confirms it.
 - Reuse the current guarded extraction, memory review, explainable prompt, activity, and editable plan-draft components behind the new task flow.
 - Add robust empty, cancelled import, unknown person, no-metadata, denied microphone, offline, no-activity, and extraction-failed paths.
@@ -160,10 +160,10 @@ Use a synthetic, clearly labelled workspace with Maya and Ari already in the use
 
 ### 2A. Capture and moment detection
 
-- Support selected-photo import from camera and library with local thumbnail storage and a user-controlled retention choice.
-- Extract available capture time and coarse place from the selected photo locally where feasible. Require correction/confirmation before it becomes a moment.
-- Add multi-person moment confirmation, duplicate detection, manual person selection, and a text-only/manual fallback.
-- Keep voice as the fastest optional way to add meaning after a moment, with editable transcript and text fallback.
+- Support a native, opt-in full-library scan with local thumbnail/reference handling and a user-controlled retention choice. The web build remains a clearly labelled fixture-only preview until a native adapter exists.
+- Extract available capture time and coarse place locally where feasible. Require keep/not-this-one confirmation before it becomes a moment.
+- Add multi-person moment confirmation and duplicate detection. Never add a person through a manual circle-management surface.
+- Keep voice as the only way to add meaning after a moment. Use a reviewable transcript internally, but never require typing on the Hangout Radar.
 - Run a technical spike for on-device recognition of a very small, user-enrolled Circle. Measure accuracy for the actual phone targets, latency, battery, storage, offline behaviour, false matches, and deletion reliability.
 - Only enable recognition if the spike meets documented thresholds and privacy controls. Otherwise ship the selected-photo, manual-tag flow as the MVP.
 
