@@ -13,8 +13,7 @@ For the best recording, use an iPhone 16 or iPhone 16 Pro simulator in portrait.
 To capture the demo, use the Simulator menu: **File → New Screen Recording**, interact with Circle, then stop the recording from the menu bar.
 
 ## Suggested demo sequence
-
-1. On Today, tap **Find something together**, choose a time, and save the draft.
+ 1. On Today, tap **Find something together**, choose a time, and save the draft.
 2. In Capture, tap **Check recent photos**, wait for the synthetic scan, then tap **Keep this moment**.
 3. Tap **Record a note**, then **Save note**.
 4. In People, open Maya to show retained context, or show the saved moment in the people list.

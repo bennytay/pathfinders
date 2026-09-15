@@ -54,18 +54,9 @@ export function PhotoGallery({ onSelect }: { onSelect: () => void }) {
     setIsDragging(false);
   }
 
-  function tapCard(relative: number, photo: (typeof photos)[number]) {
-    if (moved.current) return;
-    if (relative === 0) {
-      setSelected(photo);
-      return;
-    }
-    setOffset((value) => value + relative);
-  }
-
   const length = photos.length;
-  const cards = [];
-  for (let relative = -VISIBLE_RADIUS; relative <= VISIBLE_RADIUS; relative += 1) {
+  const offsets = Array.from({ length: VISIBLE_RADIUS * 2 + 1 }, (_, index) => index - VISIBLE_RADIUS);
+  const cards = offsets.map((relative) => {
     const photo = photos[mod(offset + relative, length)];
     const distance = Math.abs(relative);
     const translateX = relative * CARD_SPACING + (isDragging ? dragPx : 0);
@@ -73,7 +64,7 @@ export function PhotoGallery({ onSelect }: { onSelect: () => void }) {
     const scale = Math.max(1 - distance * 0.16, 0.62);
     const translateZ = -distance * 70;
     const opacity = Math.max(1 - distance * 0.28, 0);
-    cards.push(
+    return (
       <button
         type="button"
         key={`${relative}-${photo.label}`}
@@ -87,12 +78,19 @@ export function PhotoGallery({ onSelect }: { onSelect: () => void }) {
           opacity,
           transition: isDragging ? "none" : "transform 420ms cubic-bezier(.16, 1, .3, 1), opacity 420ms ease",
         }}
-        onClick={() => tapCard(relative, photo)}
+        onClick={() => {
+          if (moved.current) return;
+          if (relative === 0) {
+            setSelected(photo);
+            return;
+          }
+          setOffset((value) => value + relative);
+        }}
       >
         {relative === 0 && <span>{photo.label}</span>}
-      </button>,
+      </button>
     );
-  }
+  });
 
   return (
     <section className="photo-gallery" aria-label="Hangouts">
