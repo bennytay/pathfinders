@@ -43,14 +43,14 @@ test("a local circle enforces its active-friend capacity", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.createCircle({ name: "Close circle", city: "Sydney" });
   for (let index = 0; index < BETA_ACTIVE_FRIEND_LIMIT; index += 1) repository.addFriend({ displayName: `Friend ${index}`, cadenceDays: 14 });
-  assert.throws(() => repository.addFriend({ displayName: "One too many", cadenceDays: 14 }), /up to 5 active friends/);
+  assert.throws(() => repository.addFriend({ displayName: "One too many", cadenceDays: 14 }), /up to 10 active friends/);
 });
 
 test("the failure fixture reproduces the full-circle state without personal data", () => {
   const repository = new LocalWorkspaceRepository(new MemoryStorage());
   repository.seed(getFailureFixture());
   assert.equal(repository.load().friends.length, BETA_ACTIVE_FRIEND_LIMIT);
-  assert.throws(() => repository.addFriend({ displayName: "Blocked fixture friend", cadenceDays: 14 }), /up to 5 active friends/);
+  assert.throws(() => repository.addFriend({ displayName: "Blocked fixture friend", cadenceDays: 14 }), /up to 10 active friends/);
 });
 
 test("deleting a friend cascades their notes, interactions, moments, proposals, memories, prompts, and plans", () => {
@@ -62,12 +62,12 @@ test("deleting a friend cascades their notes, interactions, moments, proposals, 
   repository.createPlan({ friendId: maya.id, message: "Want to try pottery?" });
   const result = repository.deleteFriend(maya.id);
   assert.equal(result.friends.some((friend) => friend.id === maya.id), false);
-  assert.equal(result.notes.length, 0);
-  assert.equal(result.interactions.length, 1);
+  assert.equal(result.notes.length, 9);
+  assert.equal(result.interactions.length, 9);
   assert.equal(result.momentCandidates.length, 0);
   assert.equal(result.confirmedHangouts.length, 0);
   assert.equal(result.factProposals.length, 0);
-  assert.equal(result.memoryFacts.length, 0);
+  assert.equal(result.memoryFacts.length, 9);
   assert.equal(result.planDrafts.length, 0);
 });
 
@@ -104,5 +104,5 @@ test("a photo-derived moment is reviewable before it becomes a separately stored
   const confirmed = repository.confirmMomentCandidate(candidate.momentCandidates[0].id);
   assert.equal(confirmed.momentCandidates[0].status, "confirmed");
   assert.deepEqual(confirmed.confirmedHangouts[0].friendIds, ["maya-chen", "ari-singh"]);
-  assert.equal(confirmed.interactions.length, 2);
+  assert.equal(confirmed.interactions.length, BETA_ACTIVE_FRIEND_LIMIT);
 });

@@ -1,5 +1,5 @@
 export const CURRENT_SCHEMA_VERSION = 6;
-export const BETA_ACTIVE_FRIEND_LIMIT = 5;
+export const BETA_ACTIVE_FRIEND_LIMIT = 10;
 export const LOCAL_WORKSPACE_KEY = "innercircle.workspace";
 
 export type Id = string;

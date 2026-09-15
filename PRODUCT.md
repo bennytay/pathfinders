@@ -24,7 +24,7 @@ Salesforce-like tracking, social feeds, inbox-zero pressure, relationship rankin
 
 1. In-person connection is the goal, not messages sent or response speed.
 2. A user owns every piece of context and can inspect, edit, export, forget, or delete it.
-3. The circle stays deliberately small; the initial beta permits five active friends.
+3. The circle stays deliberately small; the initial beta permits ten active friends.
 4. AI proposals are never durable memory without informed user review.
 5. Every prompt has a plain-language reason and no social action happens automatically.
 

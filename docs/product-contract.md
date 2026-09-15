@@ -21,7 +21,7 @@ The north-star outcome is self-reported intentional in-person plans and meetups.
 - The product never automatically records, messages, shares, imports contacts, changes a calendar, or claims that someone accepted a plan.
 - A photo analysis result is disclosed as fixture, metadata, on-device recognition, or user selection. The current product only exposes a synthetic fixture adapter and has no photo-library or face-recognition access.
 - Proposed facts cannot affect a prompt until a user approves them. Every confirmed fact retains a source note and can be edited, exported, forgotten, or deleted.
-- The initial beta is one user, one city, at most five active friends, and one opt-in event source. The long-term product limit remains intentionally small.
+- The initial beta is one user, one city, at most ten active friends, and one opt-in event source. The long-term product limit remains intentionally small.
 
 ## Non-goals
 
