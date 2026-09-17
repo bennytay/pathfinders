@@ -300,6 +300,46 @@
 			<key>catalogPath</key>
 			<string>/Users/tayy/dev/pathfinders/ios/CircleDemo/Assets.xcassets</string>
 			<key>objcSymbol</key>
+			<string>ACImageNameSocialInstagram</string>
+			<key>relativePath</key>
+			<string>./social-instagram.imageset</string>
+			<key>swiftSymbol</key>
+			<string>socialInstagram</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/tayy/dev/pathfinders/ios/CircleDemo/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameSocialSnapchat</string>
+			<key>relativePath</key>
+			<string>./social-snapchat.imageset</string>
+			<key>swiftSymbol</key>
+			<string>socialSnapchat</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/tayy/dev/pathfinders/ios/CircleDemo/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameSocialWhatsapp</string>
+			<key>relativePath</key>
+			<string>./social-whatsapp.imageset</string>
+			<key>swiftSymbol</key>
+			<string>socialWhatsapp</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/tayy/dev/pathfinders/ios/CircleDemo/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameSocialX</string>
+			<key>relativePath</key>
+			<string>./social-x.imageset</string>
+			<key>swiftSymbol</key>
+			<string>socialX</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/tayy/dev/pathfinders/ios/CircleDemo/Assets.xcassets</string>
+			<key>objcSymbol</key>
 			<string>ACImageNameSpikeball</string>
 			<key>relativePath</key>
 			<string>./spikeball.imageset</string>

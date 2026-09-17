@@ -11,6 +11,8 @@ enum CaptureStage {
 /// components/event-feed.tsx. No network access, no Photos/Speech frameworks.
 final class CircleStore: ObservableObject {
     @Published var stage: CaptureStage = .gate
+    /// Personal, hand-written notes per friend — yours, not generated.
+    @Published var personalNotes: [String: String] = CircleStore.demoPersonalNotes
 
     let friends: [Friend] = CircleStore.demoFriends
     let activities: [Activity] = CircleStore.demoActivities
@@ -41,15 +43,48 @@ final class CircleStore: ObservableObject {
         friends.first { $0.id == id }?.displayName ?? ""
     }
 
+    /// Activities spanning a friend's interest cluster, ranked by how many
+    /// interests each one satisfies, falling back to a general sample so the
+    /// detail sheet is never empty.
+    func matchingActivities(for friend: Friend) -> [Activity] {
+        let matches = activities
+            .filter { tagsOverlap($0.tags, friend.interests) }
+            .sorted { lhs, rhs in
+                matchScore(lhs, friend) > matchScore(rhs, friend)
+            }
+        return Array((matches.isEmpty ? activities : matches).prefix(8))
+    }
+
+    func matchReason(for activity: Activity, friend: Friend) -> String? {
+        matchedInterest(tags: activity.tags, interests: friend.interests)
+    }
+
+    private func matchScore(_ activity: Activity, _ friend: Friend) -> Int {
+        activity.tags.filter { tag in
+            friend.interests.contains { $0.lowercased() == tag.lowercased() || $0.lowercased().contains(tag.lowercased()) || tag.lowercased().contains($0.lowercased()) }
+        }.count
+    }
+
     static let demoFriends: [Friend] = [
-        Friend(id: "priya-shah", displayName: "Priya Shah", interest: "try bouldering next week", imageName: "priya-shah"),
-        Friend(id: "hana-kim", displayName: "Hana Kim", interest: "ceramics", imageName: "hana-kim"),
-        Friend(id: "arjun-patel", displayName: "Arjun Patel", interest: "live music", imageName: "arjun-patel"),
-        Friend(id: "rohan-mehta", displayName: "Rohan Mehta", interest: "film", imageName: "rohan-mehta"),
-        Friend(id: "isla-morgan", displayName: "Isla Morgan", interest: "running", imageName: "isla-morgan"),
-        Friend(id: "haru-sato", displayName: "Haru Sato", interest: "vintage", imageName: "haru-sato"),
-        Friend(id: "tyler-woodward", displayName: "Tyler Woodward", interest: "drawing", imageName: "tyler-woodward"),
-        Friend(id: "yingying-zhang", displayName: "Yingying Zhang", interest: "books", imageName: "yingying-zhang"),
+        Friend(id: "priya-shah", displayName: "Priya Shah", interests: ["bouldering", "climbing", "running", "movement"], personality: "Adventurous and always up for something physical and spontaneous.", imageName: "priya-shah"),
+        Friend(id: "hana-kim", displayName: "Hana Kim", interests: ["ceramics", "clay", "art", "market"], personality: "A hands-on maker who loves slow, tactile creativity.", imageName: "hana-kim"),
+        Friend(id: "arjun-patel", displayName: "Arjun Patel", interests: ["live music", "jazz", "music", "dance"], personality: "Can't sit still when there's a beat, always first on the dance floor.", imageName: "arjun-patel"),
+        Friend(id: "rohan-mehta", displayName: "Rohan Mehta", interests: ["film", "cinema", "food", "dinner"], personality: "A dinner-and-a-movie type who always picks the restaurant.", imageName: "rohan-mehta"),
+        Friend(id: "isla-morgan", displayName: "Isla Morgan", interests: ["running", "movement", "dance", "bouldering"], personality: "Chases sunrise workouts and new movement classes.", imageName: "isla-morgan"),
+        Friend(id: "haru-sato", displayName: "Haru Sato", interests: ["vintage", "market", "art", "books"], personality: "Always hunting for one-of-a-kind finds and forgotten aesthetics.", imageName: "haru-sato"),
+        Friend(id: "tyler-woodward", displayName: "Tyler Woodward", interests: ["drawing", "art", "books", "reading"], personality: "Sketchbook always in hand, always down for a quiet afternoon with a book.", imageName: "tyler-woodward"),
+        Friend(id: "yingying-zhang", displayName: "Yingying Zhang", interests: ["books", "reading", "music", "live music"], personality: "Recommends a book and a playlist for every mood.", imageName: "yingying-zhang"),
+    ]
+
+    static let demoPersonalNotes: [String: String] = [
+        "priya-shah": "Owes me a rematch at the bouldering gym.",
+        "hana-kim": "Made the little blue mug I use every morning.",
+        "arjun-patel": "Always knows where the after-party is.",
+        "rohan-mehta": "Still owes me a taco truck recommendation.",
+        "isla-morgan": "Down for a 6am run, no questions asked.",
+        "haru-sato": "Found me that thrifted jacket I love.",
+        "tyler-woodward": "Drew a tiny portrait of my dog once.",
+        "yingying-zhang": "Lent me three books I still haven't returned.",
     ]
 
     static let demoActivities: [Activity] = [

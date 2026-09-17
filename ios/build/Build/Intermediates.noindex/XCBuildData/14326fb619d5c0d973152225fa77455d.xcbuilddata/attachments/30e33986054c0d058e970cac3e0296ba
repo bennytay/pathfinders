@@ -1,0 +1,69 @@
+{
+  "" : {
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemo-primary.dia",
+    "emit-module-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemo-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemo-primary-emit-module.dia",
+    "pch" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemo-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemo-primary.swiftdeps"
+  },
+  "/Users/tayy/dev/pathfinders/ios/CircleDemo/CircleDemoApp.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleDemoApp~partial.swiftmodule"
+  },
+  "/Users/tayy/dev/pathfinders/ios/CircleDemo/CircleModels.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleModels~partial.swiftmodule"
+  },
+  "/Users/tayy/dev/pathfinders/ios/CircleDemo/CirclePalette.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CirclePalette~partial.swiftmodule"
+  },
+  "/Users/tayy/dev/pathfinders/ios/CircleDemo/CircleRootView.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleRootView~partial.swiftmodule"
+  },
+  "/Users/tayy/dev/pathfinders/ios/CircleDemo/CircleStore.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/CircleStore~partial.swiftmodule"
+  },
+  "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/tayy/dev/pathfinders/ios/build/Build/Intermediates.noindex/CircleDemo.build/Debug-iphonesimulator/CircleDemo.build/Objects-normal/x86_64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

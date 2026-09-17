@@ -60,6 +60,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 struct PlanView: View {
     @EnvironmentObject private var store: CircleStore
+    @State private var selectedActivity: Activity?
 
     var body: some View {
         ScrollView {
@@ -85,7 +86,10 @@ struct PlanView: View {
                     }
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
                         ForEach(store.activities) { activity in
-                            ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                            Button(action: { selectedActivity = activity }) {
+                                ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -94,12 +98,13 @@ struct PlanView: View {
             .padding(.bottom, 40)
         }
         .background(CirclePalette.canvas.ignoresSafeArea())
+        .fullScreenCover(item: $selectedActivity) { activity in
+            EventDetailSheet(activity: activity, friends: fittingFriends(for: activity))
+        }
     }
 
     private func fittingFriends(for activity: Activity) -> [Friend] {
-        let matches = store.friends.filter { friend in
-            activity.tags.contains { tag in friend.interest.lowercased().contains(tag.lowercased()) }
-        }
+        let matches = store.friends.filter { tagsOverlap(activity.tags, $0.interests) }
         return Array((matches.isEmpty ? store.friends : matches).prefix(3))
     }
 }
@@ -249,6 +254,11 @@ struct CaptureView: View {
         ZStack {
             CirclePalette.canvas.ignoresSafeArea()
 
+            if store.stage != .reel {
+                FloatingSpheresBackground()
+                    .ignoresSafeArea()
+            }
+
             VStack(alignment: .leading, spacing: 20) {
                 CircleHeader()
                     .padding(.horizontal, 20)
@@ -266,6 +276,7 @@ struct CaptureView: View {
                     HighlightReel()
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             if store.stage == .reel {
                 MicButton(state: $micState)
@@ -274,6 +285,85 @@ struct CaptureView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
             }
         }
+    }
+}
+
+/// A drifting field of flat, crisp-edged circles behind the Capture gate/scan
+/// states. TimelineView drives the slow float so it's a live function of elapsed
+/// time; each circle also carries its own drag gesture so it can be flicked around.
+struct FloatingSpheresBackground: View {
+    fileprivate struct SphereSpec: Identifiable {
+        let id: Int
+        let baseSize: CGFloat
+        let color: Color
+        let speed: Double
+        let radius: CGFloat
+        let phaseOffset: Double
+        let anchor: UnitPoint
+    }
+
+    private let specs: [SphereSpec] = [
+        SphereSpec(id: 0, baseSize: 150, color: CirclePalette.violet, speed: 0.22, radius: 28, phaseOffset: 0.0, anchor: UnitPoint(x: 0.2, y: 0.14)),
+        SphereSpec(id: 1, baseSize: 84, color: CirclePalette.mint, speed: 0.34, radius: 22, phaseOffset: 1.4, anchor: UnitPoint(x: 0.84, y: 0.2)),
+        SphereSpec(id: 2, baseSize: 190, color: CirclePalette.peach, speed: 0.16, radius: 24, phaseOffset: 2.6, anchor: UnitPoint(x: 0.78, y: 0.58)),
+        SphereSpec(id: 3, baseSize: 64, color: CirclePalette.violetDeep, speed: 0.4, radius: 18, phaseOffset: 3.8, anchor: UnitPoint(x: 0.16, y: 0.68)),
+        SphereSpec(id: 4, baseSize: 112, color: CirclePalette.violet, speed: 0.2, radius: 20, phaseOffset: 5.0, anchor: UnitPoint(x: 0.52, y: 0.4)),
+    ]
+
+    var body: some View {
+        GeometryReader { proxy in
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                ZStack {
+                    ForEach(specs) { spec in
+                        FloatingSphere(spec: spec, time: t, containerSize: proxy.size)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(true)
+    }
+}
+
+private struct FloatingSphere: View {
+    fileprivate typealias SphereSpec = FloatingSpheresBackground.SphereSpec
+    let spec: SphereSpec
+    let time: TimeInterval
+    let containerSize: CGSize
+
+    @GestureState private var dragTranslation: CGSize = .zero
+    @State private var settledOffset: CGSize = .zero
+    @State private var bump = false
+
+    var body: some View {
+        let floatX = cos(time * spec.speed + spec.phaseOffset) * spec.radius
+        let floatY = sin(time * spec.speed * 1.3 + spec.phaseOffset) * spec.radius
+        let baseX = spec.anchor.x * containerSize.width
+        let baseY = spec.anchor.y * containerSize.height
+
+        Circle()
+            .fill(spec.color)
+            .frame(width: spec.baseSize, height: spec.baseSize)
+            .scaleEffect(bump ? 1.12 : 1)
+            .position(
+                x: baseX + floatX + settledOffset.width + dragTranslation.width,
+                y: baseY + floatY + settledOffset.height + dragTranslation.height
+            )
+            .gesture(
+                DragGesture()
+                    .updating($dragTranslation) { value, state, _ in state = value.translation }
+                    .onEnded { value in
+                        settledOffset.width += value.translation.width
+                        settledOffset.height += value.translation.height
+                    }
+            )
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) { bump = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) { bump = false }
+                }
+            }
+            .animation(.interactiveSpring(), value: dragTranslation)
     }
 }
 
@@ -339,6 +429,8 @@ struct ScanningCard: View {
     }
 }
 
+/// A full-screen photo reel that advances every 7 seconds while keeping its
+/// controls and captions inside the iPhone's readable area.
 struct HighlightReel: View {
     @EnvironmentObject private var store: CircleStore
     @State private var index = 0
@@ -352,68 +444,69 @@ struct HighlightReel: View {
 
     var body: some View {
         let highlights = store.highlights
-        GeometryReader { proxy in
+        Group {
             if highlights.isEmpty {
                 Color.clear
             } else {
                 let current = highlights[index % highlights.count]
-                ZStack(alignment: .top) {
-                    Image(current.imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .clipped()
-                        .id(current.id)
-                        .transition(.opacity)
+                GeometryReader { proxy in
+                    ZStack {
+                        Image(current.imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                            .clipped()
+                            .id(current.id)
+                            .transition(.opacity)
 
-                    LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)], startPoint: .center, endPoint: .bottom)
+                        LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)], startPoint: .center, endPoint: .bottom)
 
-                    VStack(spacing: 0) {
-                        HStack(spacing: 4) {
-                            ForEach(highlights.indices, id: \.self) { dot in
-                                Capsule()
-                                    .fill(Color.white.opacity(dot == index % highlights.count ? 0.95 : 0.32))
-                                    .frame(height: 3)
+                        VStack(spacing: 0) {
+                            SlidingProgressBar(total: highlights.count, index: index, cycleDuration: 7)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 10)
+
+                            HStack {
+                                Spacer()
+                                Button(action: { store.rescan() }) {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .foregroundStyle(.white)
+                                        .frame(width: 34, height: 34)
+                                        .background(.black.opacity(0.4), in: Circle())
+                                }
                             }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
+                            .padding(.top, 14)
+                            .padding(.trailing, 16)
 
-                        Spacer()
+                            Spacer()
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(current.caption)
-                                .font(.system(size: 23, weight: .semibold, design: .serif))
-                                .italic()
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.5), radius: 8)
-                            Text(captionMeta(current))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.85))
-                        }
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, 26)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-
-                    HStack {
-                        Spacer()
-                        Button(action: { store.rescan() }) {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .foregroundStyle(.white)
-                                .frame(width: 34, height: 34)
-                                .background(.black.opacity(0.4), in: Circle())
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(current.caption)
+                                    .font(.system(size: 23, weight: .semibold, design: .serif))
+                                    .italic()
+                                    .lineLimit(2)
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.5), radius: 8)
+                                Text(captionMeta(current))
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .lineLimit(2)
+                                    .foregroundStyle(.white.opacity(0.85))
+                            }
+                            .padding(.horizontal, 18)
+                            .padding(.trailing, 92)
+                            .padding(.bottom, 14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .padding(.top, 40)
-                    .padding(.trailing, 16)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .onTapGesture { advance() }
                 }
-                .contentShape(Rectangle())
-                .onTapGesture { advance() }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onReceive(timer) { _ in advance() }
-        .ignoresSafeArea(edges: .bottom)
     }
 
     private func advance() {
@@ -426,6 +519,28 @@ struct HighlightReel: View {
     private func captionMeta(_ highlight: Highlight) -> String {
         let names = highlight.friendIds.map { store.friendName($0) }.joined(separator: " and ")
         return "\(names) · \(highlight.place) · \(Self.dateFormatter.string(from: highlight.capturedAt))"
+    }
+}
+
+/// A single continuous track whose fill slides forward through the reel,
+/// rather than one static segment per photo.
+struct SlidingProgressBar: View {
+    let total: Int
+    let index: Int
+    let cycleDuration: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            let fraction = total > 0 ? CGFloat(index % total + 1) / CGFloat(total) : 0
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.28))
+                Capsule()
+                    .fill(Color.white.opacity(0.95))
+                    .frame(width: proxy.size.width * fraction)
+                    .animation(.linear(duration: cycleDuration), value: index)
+            }
+        }
+        .frame(height: 3)
     }
 }
 
@@ -549,23 +664,16 @@ struct PeopleView: View {
             VStack(alignment: .leading, spacing: 20) {
                 CircleHeader()
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Eyebrow("PEOPLE")
-                    Text("Your circle")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .tracking(-0.8)
-                        .foregroundStyle(CirclePalette.ink)
-                    Text("Faces, not follower counts.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(CirclePalette.muted)
-                }
-
                 LazyVGrid(columns: columns, spacing: 24) {
                     ForEach(store.friends) { friend in
-                        Button(action: { selected = friend }) {
-                            PersonCard(friend: friend)
-                        }
-                        .buttonStyle(.plain)
+                        PersonCard(
+                            friend: friend,
+                            note: Binding(
+                                get: { store.personalNotes[friend.id, default: ""] },
+                                set: { store.personalNotes[friend.id] = $0 }
+                            ),
+                            onOpenDetail: { selected = friend }
+                        )
                     }
                 }
             }
@@ -581,34 +689,44 @@ struct PeopleView: View {
 
 struct PersonCard: View {
     let friend: Friend
+    @Binding var note: String
+    let onOpenDetail: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ZStack(alignment: .bottomTrailing) {
-                Color.clear
-                    .aspectRatio(4.0 / 5.0, contentMode: .fit)
-                    .overlay(
-                        Image(friend.imageName)
-                            .resizable()
-                            .scaledToFill()
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            Button(action: onOpenDetail) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ZStack(alignment: .bottomTrailing) {
+                        Color.clear
+                            .aspectRatio(4.0 / 5.0, contentMode: .fit)
+                            .overlay(
+                                Image(friend.imageName)
+                                    .resizable()
+                                    .scaledToFill()
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-                Text(friend.initials)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
-                    .frame(width: 30, height: 30)
-                    .background(.white, in: Circle())
-                    .padding(8)
+                        Text(friend.initials)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.black)
+                            .frame(width: 30, height: 30)
+                            .background(.white, in: Circle())
+                            .padding(8)
+                    }
+
+                    Text(friend.firstName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(CirclePalette.ink)
+                }
             }
+            .buttonStyle(.plain)
 
-            Text(friend.firstName)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(CirclePalette.ink)
-            Text(friend.interest)
-                .font(.system(size: 12))
+            // A note you write yourself — not generated, just yours.
+            TextField("Add a note…", text: $note, axis: .vertical)
+                .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(CirclePalette.muted)
-                .lineLimit(2)
+                .lineLimit(1...2)
+                .textFieldStyle(.plain)
         }
     }
 }
@@ -617,46 +735,81 @@ struct PersonDetailSheet: View {
     @EnvironmentObject private var store: CircleStore
     @Environment(\.dismiss) private var dismiss
     let friend: Friend
+    @State private var selectedActivity: Activity?
+
+    private let columns = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Image(friend.imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 260)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                        .clipped()
+                VStack(alignment: .leading, spacing: 24) {
+                    ZStack(alignment: .bottomLeading) {
+                        Image(friend.imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 300)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(friend.displayName)
-                            .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundStyle(CirclePalette.ink)
-                        Text(friend.interest)
-                            .font(.system(size: 14))
-                            .foregroundStyle(CirclePalette.muted)
+                        LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.6)], startPoint: .center, endPoint: .bottom)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(friend.displayName)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text(friend.interestSummary)
+                                .font(.system(size: 12.5, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.85))
+                            Text(friend.personality)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .lineLimit(2)
+                        }
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .environment(\.colorScheme, .dark)
+                        .padding(14)
                     }
+                    .frame(height: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow("SHARED EVENTS")
-                        ForEach(store.activities.prefix(2)) { activity in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(activity.title)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(CirclePalette.ink)
-                                Text("\(activity.location) · \(activity.details)")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(CirclePalette.muted)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Eyebrow("CONNECT")
+                        HStack(spacing: 16) {
+                            SocialLinkButton(url: friend.instagramURL, platform: .instagram)
+                            SocialLinkButton(url: friend.whatsAppURL, platform: .whatsapp)
+                            SocialLinkButton(url: friend.snapchatURL, platform: .snapchat)
+                            SocialLinkButton(url: friend.xURL, platform: .x)
+                            Spacer()
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Eyebrow("PERFECT TOGETHER")
+                        Text("Things you two might like")
+                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .foregroundStyle(CirclePalette.ink)
+
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(store.matchingActivities(for: friend)) { activity in
+                                Button(action: { selectedActivity = activity }) {
+                                    GlassEventCard(activity: activity, matchedInterest: store.matchReason(for: activity, friend: friend))
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(CirclePalette.violetSoft, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
                 }
-                .padding(20)
             }
             .background(CirclePalette.canvas.ignoresSafeArea())
             .toolbar {
@@ -664,6 +817,308 @@ struct PersonDetailSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(item: $selectedActivity) { activity in
+                EventDetailSheet(activity: activity, friends: store.friends.filter { tagsOverlap(activity.tags, $0.interests) })
+            }
         }
     }
+}
+
+/// A glass-badge quick link to an external social app/profile for a friend.
+/// Uses fixture-derived handles; this is a synthetic demo, not real accounts.
+enum SocialPlatform {
+    case instagram, whatsapp, snapchat, x
+
+    var label: String {
+        switch self {
+        case .instagram: return "Instagram"
+        case .whatsapp: return "WhatsApp"
+        case .snapchat: return "Snapchat"
+        case .x: return "X"
+        }
+    }
+
+    /// Instagram and WhatsApp ship full-color glyphs, so their badge is transparent;
+    /// Snapchat and X's glyphs are single-color, composited onto their brand color.
+    var badgeBackground: AnyShapeStyle {
+        switch self {
+        case .instagram, .whatsapp: return AnyShapeStyle(Color.white.opacity(0.08))
+        case .snapchat: return AnyShapeStyle(Color(red: 1.0, green: 0.98, blue: 0.0))
+        case .x: return AnyShapeStyle(Color.black)
+        }
+    }
+}
+
+/// A glass-badge quick link to an external social app/profile, rendering each
+/// platform's real logo mark (fetched from public brand-asset sources).
+struct SocialLinkButton: View {
+    let url: URL
+    let platform: SocialPlatform
+
+    var body: some View {
+        Link(destination: url) {
+            VStack(spacing: 6) {
+                logo
+                    .frame(width: 52, height: 52)
+                    .background(platform.badgeBackground, in: Circle())
+                    .overlay(
+                        Circle().stroke(LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 8, y: 4)
+
+                Text(platform.label)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(CirclePalette.muted)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var logo: some View {
+        switch platform {
+        case .instagram:
+            Image("social-instagram").resizable().scaledToFill().clipShape(Circle())
+        case .whatsapp:
+            Image("social-whatsapp").resizable().scaledToFill().clipShape(Circle())
+        case .snapchat:
+            Image("social-snapchat").renderingMode(.template).resizable().scaledToFit()
+                .foregroundStyle(.white).padding(12)
+        case .x:
+            Image("social-x").renderingMode(.template).resizable().scaledToFit()
+                .foregroundStyle(.white).padding(15)
+        }
+    }
+}
+
+/// A frosted "glass" tile for a single activity — used in the friend detail
+/// sheet's "Perfect together" grid, matching Apple's translucent-material look.
+struct GlassEventCard: View {
+    let activity: Activity
+    var matchedInterest: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
+                    .overlay(
+                        Image(activity.id)
+                            .resizable()
+                            .scaledToFill()
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                if let matchedInterest {
+                    Text(matchedInterest.capitalized)
+                        .font(.system(size: 8.5, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .environment(\.colorScheme, .dark)
+                        .padding(6)
+                }
+            }
+            .padding(6)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(activity.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(CirclePalette.ink)
+                    .lineLimit(1)
+                Text("\(activity.location) · \(activity.details)")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(CirclePalette.muted)
+                    .lineLimit(1)
+                if let matchedInterest {
+                    Text("Fits their \(matchedInterest)")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(CirclePalette.violetDeep)
+                        .lineLimit(1)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
+        }
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(LinearGradient(colors: [.white.opacity(0.45), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.22), radius: 10, y: 6)
+    }
+}
+
+// MARK: - Event detail
+
+/// A full detail page for a single event — hero photo, an "AI"-flavored blurb,
+/// who in the circle it fits, and a few real, working external links.
+struct EventDetailSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let activity: Activity
+    let friends: [Friend]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                ShareLink(item: shareText)
+                Spacer()
+                Button("Done") { dismiss() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    ZStack(alignment: .bottomLeading) {
+                        Image(activity.id)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 280)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+
+                        LinearGradient(colors: [.clear, .black.opacity(0.2), .black.opacity(0.72)], startPoint: .center, endPoint: .bottom)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text((activity.tags.first ?? "Plan").capitalized)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(.ultraThinMaterial, in: Capsule())
+                                .environment(\.colorScheme, .dark)
+                            Text(activity.title)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("\(activity.location) · \(activity.details)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        .padding(18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: 280)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    )
+                    .padding(.top, 8)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow("ABOUT")
+                        Text(aboutText)
+                            .font(.system(size: 14))
+                            .foregroundStyle(CirclePalette.muted)
+                            .lineSpacing(3)
+                    }
+
+                    if !friends.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Eyebrow("FITS YOUR CIRCLE")
+                            HStack(spacing: 16) {
+                                ForEach(friends) { friend in
+                                    VStack(spacing: 6) {
+                                        Color.clear
+                                            .aspectRatio(1, contentMode: .fit)
+                                            .overlay(
+                                                Image(friend.imageName)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            )
+                                            .clipShape(Circle())
+                                            .frame(width: 48, height: 48)
+                                        Text(friend.firstName)
+                                            .font(.system(size: 10, weight: .semibold))
+                                            .foregroundStyle(CirclePalette.muted)
+                                    }
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow("LINKS")
+                        VStack(spacing: 10) {
+                            EventLinkRow(icon: "mappin.and.ellipse", title: "Get directions", subtitle: activity.location, url: directionsURL)
+                            EventLinkRow(icon: "ticket.fill", title: "Find tickets", subtitle: "Search Eventbrite", url: eventbriteURL)
+                            EventLinkRow(icon: "safari.fill", title: "Search the web", subtitle: "\(activity.title) · \(activity.location)", url: searchURL)
+                        }
+                    }
+                    .padding(.bottom, 30)
+                }
+                .safeAreaPadding(.horizontal, 20)
+            }
+        }
+        .background(CirclePalette.canvas.ignoresSafeArea())
+    }
+
+    private var aboutText: String {
+        "A \(activity.tags.first ?? "circle") pick at \(activity.location), \(activity.details.lowercased()). A relaxed, low-pressure way to spend time with the people you'd like to see more."
+    }
+
+    private var directionsURL: URL {
+        let query = activity.location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "http://maps.apple.com/?q=\(query)")!
+    }
+
+    private var eventbriteURL: URL {
+        let query = activity.title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "https://www.eventbrite.com/d/search/?q=\(query)")!
+    }
+
+    private var searchURL: URL {
+        let query = "\(activity.title) \(activity.location)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "https://www.google.com/search?q=\(query)")!
+    }
+
+    private var shareText: String { "\(activity.title) at \(activity.location): \(activity.details)" }
+}
+
+struct EventLinkRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let url: URL
+
+    var body: some View {
+        Link(destination: url) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(CirclePalette.violetDeep)
+                    .frame(width: 38, height: 38)
+                    .background(CirclePalette.violetSoft, in: Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(CirclePalette.ink)
+                    Text(subtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(CirclePalette.muted)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(CirclePalette.muted)
+            }
+            .padding(12)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(LinearGradient(colors: [.white.opacity(0.4), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+#Preview {
+    CircleRootView()
+        .environmentObject(CircleStore())
+        .preferredColorScheme(.dark)
 }
