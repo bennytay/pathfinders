@@ -11,7 +11,6 @@
     <key>CFBundleShortVersionString</key><string>1.0</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>LSRequiresIPhoneOS</key><true/>
-    <key>NSPhotoLibraryUsageDescription</key><string>Circle checks recent photos and lets you choose photos to add to your private hangouts.</string>
     <key>UILaunchScreen</key><dict><key>UIColorName</key><string></string></dict>
     <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
 </dict></plist>

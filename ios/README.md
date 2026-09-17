@@ -13,9 +13,8 @@ For the best recording, use an iPhone 16 or iPhone 16 Pro simulator in portrait.
 To capture the demo, use the Simulator menu: **File → New Screen Recording**, interact with Circle, then stop the recording from the menu bar.
 
 ## Suggested demo sequence
- 1. On Today, tap **Find something together**, choose a time, and save the draft.
-2. In Capture, tap **Check recent photos**, wait for the synthetic scan, then tap **Keep this moment**.
-3. Tap **Record a note**, then **Save note**.
-4. In People, open Maya to show retained context, or show the saved moment in the people list.
+1. On Plan, scroll the compact weekly calendar (note the glowing "AI pick" run club event), then scroll through the event grid of things to do together.
+2. In Capture, tap **Scan my photos**, watch the brief scanning animation, then let the full-screen highlight reel auto-advance through real photos. Tap the mic button bottom-right to show the simulated "Listening… → Saved" voice-note sequence.
+3. In People, browse the photo grid, then tap a friend to open their detail sheet.
 
-Settings includes **Reset sample space** so the sequence can be replayed before another take.
+Long-press the **circle.** wordmark (top-left, on any tab) to reset Capture back to its initial gate state so the scan sequence can be replayed for another take.

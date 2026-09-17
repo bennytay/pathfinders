@@ -11,6 +11,7 @@
 		A10000000000000000000013 /* CirclePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* CirclePalette.swift */; };
 		A10000000000000000000014 /* CircleRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* CircleRootView.swift */; };
 		A10000000000000000000015 /* CircleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* CircleStore.swift */; };
+		A10000000000000000000072 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000071 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		A10000000000000000000005 /* CircleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleStore.swift; sourceTree = "<group>"; };
 		A10000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000000000000000000007 /* CircleDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CircleDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000071 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,7 +31,7 @@
 
 /* Begin PBXGroup section */
 		A10000000000000000000031 = {isa = PBXGroup; children = (A10000000000000000000032 /* CircleDemo */, A10000000000000000000033 /* Products */); sourceTree = "<group>"; };
-		A10000000000000000000032 /* CircleDemo */ = {isa = PBXGroup; children = (A10000000000000000000001 /* CircleDemoApp.swift */, A10000000000000000000002 /* CircleModels.swift */, A10000000000000000000003 /* CirclePalette.swift */, A10000000000000000000004 /* CircleRootView.swift */, A10000000000000000000005 /* CircleStore.swift */, A10000000000000000000006 /* Info.plist */); path = CircleDemo; sourceTree = "<group>"; };
+		A10000000000000000000032 /* CircleDemo */ = {isa = PBXGroup; children = (A10000000000000000000001 /* CircleDemoApp.swift */, A10000000000000000000002 /* CircleModels.swift */, A10000000000000000000003 /* CirclePalette.swift */, A10000000000000000000004 /* CircleRootView.swift */, A10000000000000000000005 /* CircleStore.swift */, A10000000000000000000006 /* Info.plist */, A10000000000000000000071 /* Assets.xcassets */); path = CircleDemo; sourceTree = "<group>"; };
 		A10000000000000000000033 /* Products */ = {isa = PBXGroup; children = (A10000000000000000000007 /* CircleDemo.app */); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
@@ -42,7 +44,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A10000000000000000000044 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000044 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000072 /* Assets.xcassets in Resources */); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */

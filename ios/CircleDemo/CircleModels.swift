@@ -1,25 +1,52 @@
 import Foundation
+import SwiftUI
 
 struct Friend: Identifiable, Hashable {
-    let id: UUID
-    let name: String
-    let colorName: String
-    var context: [String]
-    var lastSeen: String
+    let id: String
+    let displayName: String
+    let interest: String
+    let imageName: String
 
-    var firstName: String { name.split(separator: " ").first.map(String.init) ?? name }
-    var initials: String { name.split(separator: " ").compactMap { $0.first }.map(String.init).joined() }
+    var firstName: String { displayName.split(separator: " ").first.map(String.init) ?? displayName }
+    var initials: String { displayName.split(separator: " ").compactMap { $0.first }.map(String.init).joined() }
 }
 
-struct Hangout: Identifiable {
-    let id = UUID()
-    let friend: Friend
-    let date: Date
+struct Highlight: Identifiable {
+    let id: String
+    let imageName: String
+    let caption: String
     let place: String
+    let capturedAt: Date
+    let friendIds: [String]
 }
 
-struct DraftPlan {
-    var time = "Saturday afternoon"
-    var activity = "Beginner bouldering"
-    var place = "The Climbing Lab, Newtown"
+enum EventTone {
+    case blue, rose, violet, orange, green
+
+    var color: Color {
+        switch self {
+        case .blue: return CirclePalette.toneBlue
+        case .rose: return CirclePalette.toneRose
+        case .violet: return CirclePalette.toneViolet
+        case .orange: return CirclePalette.toneOrange
+        case .green: return CirclePalette.toneGreen
+        }
+    }
+}
+
+struct CalendarEvent: Identifiable {
+    let id = UUID()
+    let title: String
+    let day: Int
+    let start: Int
+    let duration: Int
+    let tone: EventTone
+}
+
+struct Activity: Identifiable {
+    let id: String
+    let title: String
+    let details: String
+    let location: String
+    let tags: [String]
 }

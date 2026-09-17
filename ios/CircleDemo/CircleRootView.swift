@@ -1,234 +1,669 @@
 import SwiftUI
-import PhotosUI
 
 struct CircleRootView: View {
-    @EnvironmentObject private var store: CircleStore
-    @State private var tab = 0
-    @State private var showingSettings = false
-
     var body: some View {
-        ZStack(alignment: .top) {
-            CirclePalette.canvas.ignoresSafeArea()
-            TabView(selection: $tab) {
-                TodayView(showingSettings: $showingSettings, selectCapture: { tab = 1 })
-                    .tabItem { Label("Today", systemImage: "house") }.tag(0)
-                CaptureView()
-                    .tabItem { Label("Capture", systemImage: "sparkles") }.tag(1)
-                PeopleView()
-                    .tabItem { Label("People", systemImage: "person.2") }.tag(2)
-            }
-            .tint(CirclePalette.violet)
-
-            if let toast = store.toast {
-                ToastView(message: toast)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .padding(.top, 6)
-                    .zIndex(2)
-            }
+        TabView {
+            PlanView()
+                .tabItem { Label("Plan", systemImage: "calendar") }
+            CaptureView()
+                .tabItem { Label("Capture", systemImage: "sparkles") }
+            PeopleView()
+                .tabItem { Label("People", systemImage: "person.2") }
         }
-        .sheet(isPresented: $showingSettings) { SettingsView() }
-        .animation(.easeOut(duration: 0.22), value: store.toast)
+        .tint(CirclePalette.violet)
+        .preferredColorScheme(.dark)
     }
 }
 
-struct TodayView: View {
+// MARK: - Shared header
+
+struct CircleHeader: View {
     @EnvironmentObject private var store: CircleStore
-    @Binding var showingSettings: Bool
-    let selectCapture: () -> Void
-    @State private var showingPlanner = false
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        Text("circle.").font(.system(size: 28, weight: .bold, design: .rounded)).tracking(-1)
-                        Spacer()
-                        Button { showingSettings = true } label: {
-                            Image(systemName: "gearshape").frame(width: 36, height: 36)
-                                .background(.white.opacity(0.8), in: Circle())
-                        }.accessibilityLabel("Open settings")
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Eyebrow("TODAY, GENTLY")
-                        Text("Keep the good\nparts close.")
-                            .font(.system(size: 38, weight: .bold, design: .rounded)).tracking(-1.4)
-                        Text("Context for the moments that happen away from your phone.")
-                            .foregroundStyle(CirclePalette.muted).lineSpacing(3)
-                    }
-
-                    VStack(alignment: .leading, spacing: 18) {
-                        HStack {
-                            Avatar(friend: store.maya, large: true)
-                            Spacer()
-                            Label("A little nudge", systemImage: "sparkles")
-                                .font(.caption.weight(.semibold)).foregroundStyle(CirclePalette.violet)
-                                .padding(.horizontal, 10).padding(.vertical, 7)
-                                .background(.white.opacity(0.65), in: Capsule())
-                        }
-                        VStack(alignment: .leading, spacing: 6) {
-                            Eyebrow("A GOOD TIME TO REACH OUT")
-                            Text("See Maya?").font(.system(size: 31, weight: .bold, design: .rounded))
-                            Text("You both mentioned trying bouldering. There’s a lovely reason to make time.")
-                                .foregroundStyle(CirclePalette.muted).lineSpacing(3)
-                        }
-                        Button { showingPlanner = true } label: {
-                            Label("Find something together", systemImage: "arrow.right")
-                                .frame(maxWidth: .infinity)
-                        }.buttonStyle(PrimaryButtonStyle())
-                    }
-                    .padding(20)
-                    .background(CirclePalette.violetSoft, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-
-                    HStack(alignment: .lastTextBaseline) {
-                        VStack(alignment: .leading, spacing: 3) { Eyebrow("YOUR PEOPLE"); Text("Held close").font(.title2.bold()) }
-                        Spacer()
-                        Text("3 people").font(.subheadline.weight(.semibold)).foregroundStyle(CirclePalette.violet)
-                    }
-                    HStack(spacing: 19) { ForEach(store.friends) { friend in
-                        VStack(spacing: 7) { Avatar(friend: friend); Text(friend.firstName).font(.caption.weight(.medium)) }
-                    }}
-
-                    Button { selectCapture() } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "waveform").foregroundStyle(CirclePalette.violet)
-                                .frame(width: 42, height: 42).background(CirclePalette.mint, in: RoundedRectangle(cornerRadius: 13))
-                            VStack(alignment: .leading, spacing: 3) { Eyebrow("AFTER A SHARED MOMENT"); Text("Anything worth keeping?").font(.headline); Text("Say it in your own words.").font(.subheadline).foregroundStyle(CirclePalette.muted) }
-                            Spacer(); Image(systemName: "plus.circle.fill").font(.title2).foregroundStyle(CirclePalette.ink)
-                        }.padding(.vertical, 12)
-                    }.buttonStyle(.plain)
-                }.padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 32)
-            }.toolbar(.hidden, for: .navigationBar)
-        }.sheet(isPresented: $showingPlanner) { PlanSheet(friend: store.maya) }
+        HStack {
+            (Text("circle").foregroundStyle(CirclePalette.ink) + Text(".").foregroundStyle(CirclePalette.violet))
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .tracking(-0.7)
+                .onLongPressGesture(minimumDuration: 0.6) {
+                    store.reset()
+                }
+            Spacer()
+        }
+        .padding(.top, 4)
     }
+}
+
+struct Eyebrow: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View {
+        Text(text)
+            .font(.system(size: 10, weight: .heavy))
+            .tracking(1.1)
+            .foregroundStyle(CirclePalette.violetDeep)
+    }
+}
+
+struct PrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .bold))
+            .padding(.vertical, 14)
+            .foregroundStyle(CirclePalette.canvas)
+            .background(CirclePalette.violet.opacity(configuration.isPressed ? 0.8 : 1), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+    }
+}
+
+// MARK: - Plan tab
+
+struct PlanView: View {
+    @EnvironmentObject private var store: CircleStore
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                CircleHeader()
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Eyebrow("YOUR WEEK")
+                    Text("Make room for people.")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .tracking(-0.8)
+                        .foregroundStyle(CirclePalette.ink)
+                }
+
+                MiniCalendarView(events: store.calendarEvents)
+
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Eyebrow("FOR YOUR CIRCLE")
+                        Text("Events worth doing together")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(CirclePalette.ink)
+                    }
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
+                        ForEach(store.activities) { activity in
+                            ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
+        .background(CirclePalette.canvas.ignoresSafeArea())
+    }
+
+    private func fittingFriends(for activity: Activity) -> [Friend] {
+        let matches = store.friends.filter { friend in
+            activity.tags.contains { tag in friend.interest.lowercased().contains(tag.lowercased()) }
+        }
+        return Array((matches.isEmpty ? store.friends : matches).prefix(3))
+    }
+}
+
+struct MiniCalendarView: View {
+    let events: [CalendarEvent]
+
+    private let dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    private let dayNumbers = [16, 17, 18, 19, 20, 21, 22]
+    private let hourLabels = ["9", "10", "11", "12", "1", "2", "3", "4", "5", "6", "7", "8"]
+    private let rowHeight: CGFloat = 26
+    private let colWidth: CGFloat = 42
+    private let gutter: CGFloat = 22
+
+    private var gridHeight: CGFloat { rowHeight * CGFloat(hourLabels.count) }
+    private var gridWidth: CGFloat { colWidth * 7 }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 0) {
+                Color.clear.frame(width: gutter)
+                ForEach(0..<7, id: \.self) { day in
+                    VStack(spacing: 2) {
+                        Text(dayLabels[day])
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(CirclePalette.muted)
+                        Text("\(dayNumbers[day])")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(day == 2 ? CirclePalette.violetDeep : CirclePalette.ink)
+                    }
+                    .frame(width: colWidth)
+                }
+            }
+            HStack(alignment: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    ForEach(hourLabels, id: \.self) { hour in
+                        Text(hour)
+                            .font(.system(size: 8))
+                            .foregroundStyle(CirclePalette.muted)
+                            .frame(width: gutter, height: rowHeight, alignment: .top)
+                    }
+                }
+                ZStack(alignment: .topLeading) {
+                    gridLines
+                    ForEach(events) { event in
+                        EventBlock(event: event)
+                            .frame(width: colWidth - 3, height: rowHeight * CGFloat(event.duration) - 3)
+                            .offset(x: CGFloat(event.day) * colWidth + 1.5, y: CGFloat(event.start) * rowHeight + 1.5)
+                    }
+                }
+                .frame(width: gridWidth, height: gridHeight, alignment: .topLeading)
+            }
+        }
+        .padding(12)
+        .background(CirclePalette.paper, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(CirclePalette.line, lineWidth: 1))
+    }
+
+    private var gridLines: some View {
+        Canvas { context, size in
+            for row in 0...hourLabels.count {
+                let y = CGFloat(row) * rowHeight
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(CirclePalette.line.opacity(0.5)), lineWidth: 1)
+            }
+            for col in 0...7 {
+                let x = CGFloat(col) * colWidth
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(CirclePalette.line.opacity(0.5)), lineWidth: 1)
+            }
+        }
+        .frame(width: gridWidth, height: gridHeight)
+    }
+}
+
+struct EventBlock: View {
+    let event: CalendarEvent
+
+    var body: some View {
+        Text(event.title)
+            .font(.system(size: 8, weight: .semibold))
+            .foregroundStyle(.white)
+            .lineLimit(2)
+            .padding(3)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(event.tone.color, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+}
+
+struct ActivityCard: View {
+    let activity: Activity
+    let friends: [Friend]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
+                    .overlay(
+                        Image(activity.id)
+                            .resizable()
+                            .scaledToFill()
+                    )
+                    .overlay(LinearGradient(colors: [.black.opacity(0.02), .black.opacity(0.5)], startPoint: .top, endPoint: .bottom))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                Text((activity.tags.first ?? "Plan").capitalized)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(.white.opacity(0.9), in: Capsule())
+                    .padding(8)
+            }
+
+            Text(activity.title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(CirclePalette.ink)
+                .lineLimit(1)
+            Text("\(activity.location) · \(activity.details)")
+                .font(.system(size: 11))
+                .foregroundStyle(CirclePalette.muted)
+                .lineLimit(1)
+            Text("Fits \(friends.map(\.firstName).joined(separator: ", "))")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(CirclePalette.violetDeep)
+                .lineLimit(1)
+        }
+    }
+}
+
+// MARK: - Capture tab
+
+enum MicState {
+    case idle, listening, saved
 }
 
 struct CaptureView: View {
     @EnvironmentObject private var store: CircleStore
-    @State private var isRecording = false
-    @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var micState: MicState = .idle
+
+    var body: some View {
+        ZStack {
+            CirclePalette.canvas.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 20) {
+                CircleHeader()
+                    .padding(.horizontal, 20)
+
+                switch store.stage {
+                case .gate:
+                    GateCard(onScan: { store.startScan() })
+                        .padding(.horizontal, 20)
+                    Spacer()
+                case .scanning:
+                    ScanningCard()
+                        .padding(.horizontal, 20)
+                    Spacer()
+                case .reel:
+                    HighlightReel()
+                }
+            }
+
+            if store.stage == .reel {
+                MicButton(state: $micState)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 28)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            }
+        }
+    }
+}
+
+struct GateCard: View {
+    let onScan: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "camera.viewfinder")
+                .font(.system(size: 30))
+                .foregroundStyle(CirclePalette.violet)
+            Eyebrow("PHOTO-NATIVE")
+            Text("Let Circle learn your circle.")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(CirclePalette.ink)
+            Text("Circle scans the photos on this device for the friends you've already added, matching against the reference photo already on each profile. It never uploads a photo.")
+                .font(.system(size: 13))
+                .foregroundStyle(CirclePalette.muted)
+                .multilineTextAlignment(.center)
+            Button(action: onScan) {
+                Text("Scan my photos")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(CirclePalette.paper, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+    }
+}
+
+struct ScanningCard: View {
+    @State private var rotation: Double = 0
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .stroke(CirclePalette.violetSoft, lineWidth: 3)
+                    .frame(width: 56, height: 56)
+                Circle()
+                    .trim(from: 0, to: 0.25)
+                    .stroke(CirclePalette.violet, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .frame(width: 56, height: 56)
+                    .rotationEffect(.degrees(rotation))
+                    .onAppear {
+                        withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
+                            rotation = 360
+                        }
+                    }
+            }
+            Text("Scanning your photos")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(CirclePalette.violetDeep)
+            Text("Looking for moments with your circle…")
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .foregroundStyle(CirclePalette.ink)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 46)
+        .background(CirclePalette.paper, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+    }
+}
+
+struct HighlightReel: View {
+    @EnvironmentObject private var store: CircleStore
+    @State private var index = 0
+
+    private let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
+    var body: some View {
+        let highlights = store.highlights
+        GeometryReader { proxy in
+            if highlights.isEmpty {
+                Color.clear
+            } else {
+                let current = highlights[index % highlights.count]
+                ZStack(alignment: .top) {
+                    Image(current.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+                        .id(current.id)
+                        .transition(.opacity)
+
+                    LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)], startPoint: .center, endPoint: .bottom)
+
+                    VStack(spacing: 0) {
+                        HStack(spacing: 4) {
+                            ForEach(highlights.indices, id: \.self) { dot in
+                                Capsule()
+                                    .fill(Color.white.opacity(dot == index % highlights.count ? 0.95 : 0.32))
+                                    .frame(height: 3)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+
+                        Spacer()
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(current.caption)
+                                .font(.system(size: 23, weight: .semibold, design: .serif))
+                                .italic()
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.5), radius: 8)
+                            Text(captionMeta(current))
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.85))
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, 26)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    HStack {
+                        Spacer()
+                        Button(action: { store.rescan() }) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundStyle(.white)
+                                .frame(width: 34, height: 34)
+                                .background(.black.opacity(0.4), in: Circle())
+                        }
+                    }
+                    .padding(.top, 40)
+                    .padding(.trailing, 16)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { advance() }
+            }
+        }
+        .onReceive(timer) { _ in advance() }
+        .ignoresSafeArea(edges: .bottom)
+    }
+
+    private func advance() {
+        guard !store.highlights.isEmpty else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            index = (index + 1) % store.highlights.count
+        }
+    }
+
+    private func captionMeta(_ highlight: Highlight) -> String {
+        let names = highlight.friendIds.map { store.friendName($0) }.joined(separator: " and ")
+        return "\(names) · \(highlight.place) · \(Self.dateFormatter.string(from: highlight.capturedAt))"
+    }
+}
+
+struct MicButton: View {
+    @Binding var state: MicState
+    @State private var pulse = false
+    @State private var sheenRotation: Double = 0
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            if state == .listening {
+                Text("Listening…")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
+            } else if state == .saved {
+                Text("Saved privately on this device.")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
+            }
+
+            Button(action: handleTap) {
+                ZStack {
+                    LiquidGlassBlobs(active: state == .listening)
+
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 54, height: 54)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    AngularGradient(
+                                        colors: [CirclePalette.violet.opacity(0.95), .white.opacity(0.7), CirclePalette.violet.opacity(0.15), CirclePalette.violet.opacity(0.95)],
+                                        center: .center,
+                                        angle: .degrees(sheenRotation)
+                                    ),
+                                    lineWidth: state == .listening ? 2.4 : 1
+                                )
+                        )
+                        .shadow(color: CirclePalette.violet.opacity(state == .listening ? 0.6 : 0.18), radius: state == .listening ? 16 : 6)
+                        .scaleEffect(state == .listening && pulse ? 1.1 : 1)
+
+                    Image(systemName: state == .listening ? "waveform" : "mic.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 90, height: 90)
+            }
+            .buttonStyle(.plain)
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: state)
+        .onAppear {
+            withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) {
+                sheenRotation = 360
+            }
+            withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
+    }
+
+    private func handleTap() {
+        guard state == .idle else { return }
+        state = .listening
+        Task {
+            try? await Task.sleep(nanoseconds: 1_600_000_000)
+            state = .saved
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            state = .idle
+        }
+    }
+}
+
+/// A soft, continuously-morphing cluster of frosted blobs behind the mic button —
+/// TimelineView drives it so the wobble is a live function of elapsed time rather
+/// than a one-shot interpolation between two states.
+struct LiquidGlassBlobs: View {
+    var active: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !active)) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            ZStack {
+                ForEach(0..<4, id: \.self) { i in
+                    let phase = t * 1.7 + Double(i) * 1.6
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 44, height: 44)
+                        .scaleEffect(0.8 + 0.4 * CGFloat(sin(phase)))
+                        .offset(
+                            x: CGFloat(cos(phase * 0.85)) * 22,
+                            y: CGFloat(sin(phase * 1.15)) * 22
+                        )
+                        .blur(radius: 4)
+                        .opacity(active ? 0.65 : 0)
+                }
+            }
+        }
+        .frame(width: 90, height: 90)
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - People tab
+
+struct PeopleView: View {
+    @EnvironmentObject private var store: CircleStore
+    @State private var selected: Friend?
+
+    private let columns = [GridItem(.flexible(), spacing: 17), GridItem(.flexible(), spacing: 17)]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                CircleHeader()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Eyebrow("PEOPLE")
+                    Text("Your circle")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .tracking(-0.8)
+                        .foregroundStyle(CirclePalette.ink)
+                    Text("Faces, not follower counts.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(CirclePalette.muted)
+                }
+
+                LazyVGrid(columns: columns, spacing: 24) {
+                    ForEach(store.friends) { friend in
+                        Button(action: { selected = friend }) {
+                            PersonCard(friend: friend)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
+        .background(CirclePalette.canvas.ignoresSafeArea())
+        .sheet(item: $selected) { friend in
+            PersonDetailSheet(friend: friend)
+        }
+    }
+}
+
+struct PersonCard: View {
+    let friend: Friend
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack(alignment: .bottomTrailing) {
+                Color.clear
+                    .aspectRatio(4.0 / 5.0, contentMode: .fit)
+                    .overlay(
+                        Image(friend.imageName)
+                            .resizable()
+                            .scaledToFill()
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Text(friend.initials)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.black)
+                    .frame(width: 30, height: 30)
+                    .background(.white, in: Circle())
+                    .padding(8)
+            }
+
+            Text(friend.firstName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(CirclePalette.ink)
+            Text(friend.interest)
+                .font(.system(size: 12))
+                .foregroundStyle(CirclePalette.muted)
+                .lineLimit(2)
+        }
+    }
+}
+
+struct PersonDetailSheet: View {
+    @EnvironmentObject private var store: CircleStore
+    @Environment(\.dismiss) private var dismiss
+    let friend: Friend
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Eyebrow("HANGOUT RADAR")
-                        Text("Moments, quietly noticed.").font(.system(size: 33, weight: .bold, design: .rounded)).tracking(-1)
-                        Text("A demo of an opt-in photo check. Nothing becomes a memory until you say so.").foregroundStyle(CirclePalette.muted).lineSpacing(3)
+                VStack(alignment: .leading, spacing: 20) {
+                    Image(friend.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 260)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .clipped()
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(friend.displayName)
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .foregroundStyle(CirclePalette.ink)
+                        Text(friend.interest)
+                            .font(.system(size: 14))
+                            .foregroundStyle(CirclePalette.muted)
                     }
 
-                    if store.isScanning {
-                        VStack(spacing: 16) { ProgressView().controlSize(.large); Text("Checking your recent photo library…").font(.headline); Text("Circle only reads the recent-library count until you choose images to add.").font(.subheadline).foregroundStyle(CirclePalette.muted) }
-                            .frame(maxWidth: .infinity).padding(.vertical, 46).background(.white.opacity(0.68), in: RoundedRectangle(cornerRadius: 26))
-                    } else if store.momentFound {
-                        MomentCandidateView()
-                    } else {
-                        VStack(spacing: 15) {
-                            Image(systemName: "photo.on.rectangle.angled").font(.system(size: 34)).foregroundStyle(CirclePalette.violet)
-                            Eyebrow("PHOTO LIBRARY")
-                            Text(store.recentPhotoCount > 0 ? "(store.recentPhotoCount) recent photos, ready when you are." : "Looking for shared moments.").font(.title3.bold())
-                            Text("Circle checks your recent library on this iPhone. Nothing is kept until you choose an image.").multilineTextAlignment(.center).foregroundStyle(CirclePalette.muted)
-                            PhotosPicker(selection: $selectedPhotos, maxSelectionCount: 12, matching: .images) { Label("Add photos", systemImage: "plus") }.buttonStyle(PrimaryButtonStyle())
-                            if store.importedPhotoCount > 0 { Text("(store.importedPhotoCount) photo\(store.importedPhotoCount == 1 ? "" : "s") added locally.").font(.caption).foregroundStyle(CirclePalette.muted) }
-                            Button("Refresh recent photos") { store.scanPhotoLibrary() }.buttonStyle(SecondaryButtonStyle())
-                        }.frame(maxWidth: .infinity).padding(24).background(.white.opacity(0.68), in: RoundedRectangle(cornerRadius: 26))
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow("SHARED EVENTS")
+                        ForEach(store.activities.prefix(2)) { activity in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(activity.title)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(CirclePalette.ink)
+                                Text("\(activity.location) · \(activity.details)")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(CirclePalette.muted)
+                            }
+                        }
                     }
-
-                    VStack(alignment: .leading, spacing: 13) {
-                        HStack { Image(systemName: isRecording ? "record.circle.fill" : "mic.fill").foregroundStyle(isRecording ? .red : CirclePalette.violet); Text(isRecording ? "Listening…" : "A quick note").font(.headline) }
-                        Text(isRecording ? "Tap save to keep the demo recap." : store.savedNote).foregroundStyle(CirclePalette.muted).italic()
-                        Button { if isRecording { store.saveVoiceNote() }; isRecording.toggle() } label: { Label(isRecording ? "Save note" : "Record a note", systemImage: isRecording ? "checkmark" : "mic") }.buttonStyle(SecondaryButtonStyle())
-                    }.padding(18).background(CirclePalette.violetSoft.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
-                }.padding(20)
-            }.navigationTitle("Capture").navigationBarTitleDisplayMode(.inline)
-                .task { store.scanPhotoLibrary() }
-                .onChange(of: selectedPhotos) { _, photos in
-                    Task { await store.importPhotos(photos) }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(CirclePalette.violetSoft, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                .padding(20)
+            }
+            .background(CirclePalette.canvas.ignoresSafeArea())
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
         }
     }
 }
-
-struct MomentCandidateView: View {
-    @EnvironmentObject private var store: CircleStore
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ZStack(alignment: .bottomLeading) {
-                LinearGradient(colors: [CirclePalette.mint, CirclePalette.violetSoft], startPoint: .topLeading, endPoint: .bottomTrailing)
-                VStack(alignment: .leading) { Text("Saturday").font(.caption.bold()); Text("Newtown").font(.title2.bold()) }.padding(16)
-            }.frame(height: 155).clipShape(RoundedRectangle(cornerRadius: 18))
-            Label("A possible hangout", systemImage: "circle.fill").font(.caption.weight(.semibold)).foregroundStyle(CirclePalette.violet)
-            Text("Was this with Maya and Ari?").font(.title3.bold())
-            Text("Saturday, 12 Sep · Newtown").foregroundStyle(CirclePalette.muted)
-            HStack { Button("Keep this moment") { store.keepMoment() }.buttonStyle(PrimaryButtonStyle()); Button("Not this one") { store.momentFound = false }.buttonStyle(SecondaryButtonStyle()) }
-            Text("This potential hangout stays separate until you keep it.").font(.caption).foregroundStyle(CirclePalette.muted)
-        }.padding(18).background(.white.opacity(0.78), in: RoundedRectangle(cornerRadius: 26))
-    }
-}
-
-struct PeopleView: View {
-    @EnvironmentObject private var store: CircleStore
-    var body: some View {
-        NavigationStack {
-            List {
-                Section { Text("People you choose to keep close. No scores, no reminders you didn’t ask for.").foregroundStyle(CirclePalette.muted).listRowBackground(Color.clear) }
-                Section("Your circle") { ForEach(store.friends) { friend in NavigationLink(value: friend) { HStack(spacing: 13) { Avatar(friend: friend); VStack(alignment: .leading, spacing: 3) { Text(friend.name).fontWeight(.semibold); Text(friend.lastSeen).font(.caption).foregroundStyle(CirclePalette.muted) } } } } }
-                if !store.hangouts.isEmpty { Section("Saved moments") { ForEach(store.hangouts) { hangout in Label("Newtown with \(hangout.friend.firstName)", systemImage: "heart.fill").foregroundStyle(CirclePalette.violet) } } }
-            }.scrollContentBackground(.hidden).background(CirclePalette.canvas).navigationTitle("People")
-            .navigationDestination(for: Friend.self) { PersonDetail(friend: $0) }
-        }
-    }
-}
-
-struct PersonDetail: View {
-    let friend: Friend
-    @State private var showingPlanner = false
-    var body: some View {
-        ScrollView { VStack(alignment: .leading, spacing: 22) {
-            HStack(spacing: 14) { Avatar(friend: friend, large: true); VStack(alignment: .leading) { Text(friend.name).font(.title.bold()); Text(friend.lastSeen).foregroundStyle(CirclePalette.muted) } }
-            VStack(alignment: .leading, spacing: 13) { Eyebrow("HELD CONTEXT"); ForEach(friend.context, id: \.self) { Label($0, systemImage: "circle.fill").font(.subheadline).foregroundStyle(CirclePalette.muted) } }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(CirclePalette.violetSoft.opacity(0.55), in: RoundedRectangle(cornerRadius: 22))
-            Button { showingPlanner = true } label: { Label("Make a gentle plan", systemImage: "calendar.badge.plus").frame(maxWidth: .infinity) }.buttonStyle(PrimaryButtonStyle())
-        }.padding(20) }.background(CirclePalette.canvas).sheet(isPresented: $showingPlanner) { PlanSheet(friend: friend) }
-    }
-}
-
-struct PlanSheet: View {
-    @EnvironmentObject private var store: CircleStore
-    let friend: Friend
-    @Environment(\.dismiss) private var dismiss
-    @State private var draft = DraftPlan()
-    var body: some View {
-        NavigationStack { Form {
-            Section { Text("A draft for \(friend.firstName), based only on the context you chose to keep.").foregroundStyle(CirclePalette.muted) }
-            Section("A simple plan") { Picker("When", selection: $draft.time) { Text("Saturday afternoon").tag("Saturday afternoon"); Text("Next weeknight").tag("Next weeknight") }; TextField("Activity", text: $draft.activity); TextField("Place", text: $draft.place) }
-            Section { Button("Save private draft") { store.savePlan(draft); dismiss() }.frame(maxWidth: .infinity).foregroundStyle(CirclePalette.violet).fontWeight(.semibold) }
-        }.navigationTitle("Make a plan").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { dismiss() } } }
-        }
-    }
-}
-
-struct SettingsView: View {
-    @EnvironmentObject private var store: CircleStore
-    @Environment(\.dismiss) private var dismiss
-    var body: some View {
-        NavigationStack { List {
-            Section("Your Circle") { Label("All demo context is stored locally", systemImage: "lock.fill"); Label("No contact import or outreach", systemImage: "hand.raised.fill") }
-            Section("Demo controls") { Button("Reset sample space", role: .destructive) { store.resetDemo(); dismiss() } }
-            Section { Text("This build is a local, synthetic demo for recording. It does not connect to a server or access a photo library.").font(.footnote).foregroundStyle(CirclePalette.muted) }
-        }.navigationTitle("Settings").toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
-        }
-    }
-}
-
-struct Avatar: View {
-    let friend: Friend
-    var large = false
-    var body: some View { Text(friend.initials).font(.system(size: large ? 17 : 13, weight: .bold, design: .rounded)).foregroundStyle(CirclePalette.ink).frame(width: large ? 52 : 42, height: large ? 52 : 42).background(CirclePalette.avatar(friend.colorName), in: Circle()) }
-}
-
-struct Eyebrow: View { let text: String; init(_ text: String) { self.text = text }; var body: some View { Text(text).font(.caption2.weight(.bold)).tracking(1.1).foregroundStyle(CirclePalette.violet) } }
-struct ToastView: View { let message: String; var body: some View { Text(message).font(.subheadline.weight(.semibold)).padding(.horizontal, 16).padding(.vertical, 11).background(.ultraThinMaterial, in: Capsule()).shadow(radius: 12) } }
-struct PrimaryButtonStyle: ButtonStyle { func makeBody(configuration: Configuration) -> some View { configuration.label.font(.subheadline.weight(.bold)).padding(.vertical, 14).padding(.horizontal, 16).foregroundStyle(.white).background(CirclePalette.violet.opacity(configuration.isPressed ? 0.78 : 1), in: RoundedRectangle(cornerRadius: 15)).scaleEffect(configuration.isPressed ? 0.98 : 1) } }
-struct SecondaryButtonStyle: ButtonStyle { func makeBody(configuration: Configuration) -> some View { configuration.label.font(.subheadline.weight(.semibold)).padding(.vertical, 13).padding(.horizontal, 15).foregroundStyle(CirclePalette.ink).background(.white.opacity(0.84), in: RoundedRectangle(cornerRadius: 15)).overlay(RoundedRectangle(cornerRadius: 15).stroke(CirclePalette.violet.opacity(0.15))) } }
