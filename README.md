@@ -47,6 +47,8 @@ Milestone 0 reframes the app around mobile Today, Add a moment, and People surfa
 
 The previous foundation adds optional local voice recording with playback and manual editable transcription, strict offline proposal schema and source-span validation, and transparent activity planning. Read the [voice feasibility decision](docs/voice-transcription-feasibility.md), [grounded extraction contract](docs/grounded-extraction.md), and [in-person planning contract](docs/in-person-planning.md).
 
+The proposed AI core is documented in the [Visual Person Intelligence backbone plan](docs/plans/ai-backbone.md). It specifies an evidence-first pipeline from camera-roll observations to anonymous identity clusters, events, person timelines, calibrated claims, private highlights, and explainable group-event recommendations.
+
 
 ## Contributing
 
