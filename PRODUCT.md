@@ -1,4 +1,4 @@
-# Product
+# Circle product context
 
 ## Register
 
@@ -6,28 +6,28 @@ product
 
 ## Users
 
-University students, starting at UNSW Sydney, who want a private, fast way to remember the people in their social orbit. They use it between classes, after a night out, or when they realise they have not seen someone in a while.
+Socially busy people aged 18–30 whose close friendships are spread across digital channels and who want more intentional time together in person.
 
-## Product Purpose
+## Product purpose
 
-Circle is a local-first personal notebook for friends and people a student might date. It makes logging a shared night quick, turns those moments into a useful relationship timeline, and gives friendly nudges about who to pull up on.
+Circle is a privacy-first, local-first assistant for a user-chosen small circle of close friends. It quietly remembers the context a person chooses to give it, then helps create the next real-life interaction.
 
-## Brand Personality
+## Brand personality
 
-Playful, intimate, spontaneous. The voice is casual texting, never judgemental or corporate.
+Calm, specific, human, and non-judgmental. It should feel like a private notebook that helps someone follow through, never a relationship CRM.
 
 ## Anti-references
 
-Salesforce, enterprise CRMs, spreadsheet-like directories, clinical dating trackers, Linear and Notion-style admin interfaces.
+Salesforce-like tracking, social feeds, inbox-zero pressure, relationship rankings, gamified streaks, surveillance aesthetics, automatic outreach, and generic AI dashboards.
 
-## Design Principles
+## Product principles
 
-1. Make the social graph feel alive, like a story tray and a group chat.
-2. Make logging a night possible in a few taps.
-3. Let crushes be first-class, private, and free of moralising.
-4. Prefer warm, specific campus-life prompts to abstract productivity language.
-5. Keep personal data visibly private and entirely under the user's control.
+1. In-person connection is the goal, not messages sent or response speed.
+2. A user owns every piece of context and can inspect, edit, export, forget, or delete it.
+3. The circle stays deliberately small; the initial beta permits ten active friends.
+4. AI proposals are never durable memory without informed user review.
+5. Every prompt has a plain-language reason and no social action happens automatically.
 
-## Accessibility & Inclusion
+## Accessibility
 
-Meet WCAG AA basics: sufficient contrast, labels and text in addition to colour, keyboard-accessible controls, and reduced motion for device preferences. Pronouns, names, degrees, relationship labels, and universities remain flexible and optional where appropriate.
+Meet WCAG AA basics. Support keyboard use, visible focus, reduced motion, semantic controls, meaningful empty states, and clear labels in addition to colour.
