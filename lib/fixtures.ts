@@ -60,7 +60,7 @@ export function getFixtureWorkspace(): WorkspaceState {
     factProposals: [{ id: "priya-internship-proposal", friendId: "priya-shah", sourceNoteId: "priya-bouldering-reflection", type: "preference", value: "started her internship", sourceSpan: { start: 77, end: 99, text: "started her internship" }, confidence: 0.72, suggestedIntent: "remember", adapter: "fixture-extractor-v1", status: "pending", createdAt: "2026-08-21T08:30:00.000Z" }], memoryFacts,
     activities: activities.map(([id, title, details, location, tags]) => ({ id, title, details, location, source: "fixture" as const, retrievedAt: "2026-09-14T08:30:00.000Z", tags: [...tags] })),
     prompts: [], planDrafts: [],
-    privacySettings: { audioRetention: "transcript-only", telemetryOptIn: false, remoteProcessingDefault: "ask-every-note", updatedAt: "2026-09-14T08:30:00.000Z" }, photoLibrary: { granted: false }, migrationHistory: [{ version: CURRENT_SCHEMA_VERSION, migratedAt: "2026-09-14T08:30:00.000Z" }],
+    privacySettings: { audioRetention: "transcript-only", telemetryOptIn: false, remoteProcessingDefault: "ask-every-note", updatedAt: "2026-09-14T08:30:00.000Z" }, photoLibrary: { granted: false }, photoStars: [], migrationHistory: [{ version: CURRENT_SCHEMA_VERSION, migratedAt: "2026-09-14T08:30:00.000Z" }],
   };
 }
 

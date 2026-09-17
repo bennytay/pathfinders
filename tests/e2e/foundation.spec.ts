@@ -9,9 +9,25 @@ test("scanning the photo library surfaces a highlight with remembered context", 
   await page.goto("/");
   await page.getByRole("button", { name: "Capture" }).click();
   await page.getByRole("button", { name: "Scan my photos" }).click();
-  await expect(page.getByText("One more game before the sun went down.")).toBeVisible();
-  await expect(page.getByText(/Priya Shah · The Courts ·/)).toBeVisible();
+  await expect(page.getByText("First one on the dance floor, as usual.")).toBeVisible();
+  await expect(page.getByText(/Arjun Patel · The Birthday Party ·/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan for new photos" })).toBeVisible();
+});
+
+test("starring a highlight is explicit, reversible, and explains itself", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Capture" }).click();
+  await page.getByRole("button", { name: "Scan my photos" }).click();
+  const star = page.getByRole("button", { name: "Save this feeling" });
+  await expect(star).toHaveAttribute("aria-pressed", "false");
+  await star.click();
+  const saved = page.getByRole("button", { name: "Saved" });
+  await expect(saved).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Why this photo?" }).click();
+  await expect(page.locator(".reel-reason")).toBeVisible();
+  await saved.click();
+  await expect(page.getByRole("button", { name: "Save this feeling" })).toHaveAttribute("aria-pressed", "false");
 });
 
 test("the weekly calendar and circle recommendations are interactive", async ({ page }) => {

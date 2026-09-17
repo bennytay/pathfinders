@@ -62,7 +62,12 @@ body, .circle-shell { background: var(--canvas); color: var(--ink); font-family:
 .highlight-caption { position: absolute; right: 1.1rem; bottom: 1.1rem; left: 1.1rem; z-index: 1; }
 .highlight-quote { margin: 0 0 .35rem; color: oklch(.99 .008 300); font-family: var(--font-caption), Georgia, serif; font-size: 1.55rem; font-style: italic; font-weight: 600; line-height: 1.2; text-shadow: 0 2px 18px oklch(.02 .01 285 / .6); }
 .highlight-meta { margin: 0; color: oklch(.92 .012 300 / .88); font-size: .78rem; font-weight: 700; letter-spacing: .01em; }
-.highlight-actions { margin-top: 0; }
+.highlight-actions { display: flex; align-items: center; gap: .6rem; margin-top: .75rem; }
+.star-button { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid oklch(1 .01 300 / .38); border-radius: 999px; background: oklch(.1 .02 285 / .45); padding: .5rem .9rem; color: oklch(.98 .01 300); font-size: .8rem; font-weight: 760; backdrop-filter: blur(6px); }
+.star-button svg { width: 1rem; height: 1rem; }
+.star-button.starred { border-color: var(--peach); background: oklch(.3 .1 70 / .55); color: var(--peach); }
+.reel-why-button { border: 0; background: transparent; padding: .5rem .2rem; color: oklch(.92 .012 300 / .75); font-size: .76rem; font-weight: 700; text-decoration: underline; text-underline-offset: .2rem; }
+.reel-reason { margin: .5rem 0 0; color: oklch(.94 .01 300 / .92); font-size: .78rem; line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .highlight-frame { transition: none !important; } }
 
 /* Plan: full event grid with who-to-go-with suggestions, below the compact calendar */

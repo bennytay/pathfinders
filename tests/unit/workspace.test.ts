@@ -122,3 +122,31 @@ test("scanning the photo library immediately surfaces highlights as kept moments
   const rescanned = repository.scanPhotoLibrary(getFixturePhotoLibraryScan(seeded.friends));
   assert.equal(rescanned.momentCandidates.filter((candidate) => candidate.candidateFriendIds.includes("hana-kim")).length, 1, "re-scanning is idempotent");
 });
+
+test("starring a photo is an explicit, reversible local signal", () => {
+  const repository = new LocalWorkspaceRepository(new MemoryStorage());
+  const seeded = repository.seed(getFixtureWorkspace());
+  const scanned = repository.scanPhotoLibrary(getFixturePhotoLibraryScan(seeded.friends));
+  const photoId = scanned.momentCandidates[0].id;
+  assert.equal(scanned.photoStars.length, 0);
+  const starred = repository.toggleMomentStar(photoId);
+  assert.equal(starred.photoStars.length, 1);
+  assert.equal(starred.photoStars[0].photoId, photoId);
+  const unstarred = repository.toggleMomentStar(photoId);
+  assert.equal(unstarred.photoStars.length, 0, "tapping star again removes it");
+  assert.throws(() => repository.toggleMomentStar("not-a-real-photo"));
+});
+
+test("deleting a friend cascades to remove stars on their moments, and reset clears every star", () => {
+  const repository = new LocalWorkspaceRepository(new MemoryStorage());
+  const seeded = repository.seed(getFixtureWorkspace());
+  const scanned = repository.scanPhotoLibrary(getFixturePhotoLibraryScan(seeded.friends));
+  const priyaPhoto = scanned.momentCandidates.find((candidate) => candidate.candidateFriendIds.includes("priya-shah"))!;
+  repository.toggleMomentStar(priyaPhoto.id);
+  const afterDelete = repository.deleteFriend("priya-shah");
+  assert.equal(afterDelete.photoStars.some((star) => star.photoId === priyaPhoto.id), false);
+  const otherPhoto = afterDelete.momentCandidates.find((candidate) => !candidate.candidateFriendIds.includes("priya-shah"))!;
+  repository.toggleMomentStar(otherPhoto.id);
+  const cleared = repository.resetReelPreferences();
+  assert.equal(cleared.photoStars.length, 0);
+});
