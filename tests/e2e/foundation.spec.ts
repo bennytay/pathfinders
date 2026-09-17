@@ -4,41 +4,46 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => window.localStorage.clear());
 });
 
-test("the capture grid opens a contextual hangout and keeps review explicit", async ({ page }) => {
+test("scanning the photo library surfaces a highlight with remembered context", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("button", { name: "Capture" }).click();
-  await page.getByRole("button", { name: "Saturday in Newtown" }).click();
-  await expect(page.getByText("Maya and Ari finally tried the beginner wall")).toBeVisible();
-  await page.getByRole("button", { name: "Keep this as a moment" }).click();
-  await expect(page.getByText("Was this with Maya Chen and Ari Singh?")).toBeVisible();
-  await page.getByRole("button", { name: "Keep moment" }).click();
-  await expect(page.locator(".save-message")).toContainText("Moment saved privately");
+  await page.getByRole("button", { name: "Scan my photos" }).click();
+  await expect(page.getByText("One more game before the sun went down.")).toBeVisible();
+  await expect(page.getByText("Priya Shah · The Courts · Sep 7, 2026")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan for new photos" })).toBeVisible();
 });
 
-test("plan calendar and recommendation are interactive", async ({ page }) => {
+test("the weekly calendar and circle recommendations are interactive", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Tue 17" }).click();
-  await expect(page.getByText("Tue 17 · 6:30pm")).toBeVisible();
-  await page.getByRole("button", { name: "View Beginner bouldering" }).click();
-  await expect(page.getByText("is a fair trip for you both.")).toBeVisible();
+  await page.locator(".calendar-event.ai-suggested").click();
+  await expect(page.getByText("AI suggestion: Run club with Isla")).toBeVisible();
+  await expect(page.getByText("Invite Isla for the 5:30pm beginner loop, then stay for the post-run drink.")).toBeVisible();
+  await page.getByRole("button", { name: "Close event details" }).click();
+  await page.getByRole("button", { name: /Beginner bouldering/ }).click();
+  await expect(page.getByText("This matches Priya based on the interests you saved. Pick a time, then make an editable plan draft.")).toBeVisible();
 });
 
-test("review remains accessible from settings and requires approval", async ({ page }) => {
+test("an event recommendation leads to an editable, unsent plan draft", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Open settings" }).click();
-  await page.getByRole("button", { name: "Review saved context" }).click();
-  await expect(page.getByText("Source: “started her internship” in the linked note.")).toBeVisible();
-  await page.getByRole("button", { name: "Approve as memory" }).click();
-  await expect(page.getByLabel("Edit memory").first()).toHaveValue("started her internship");
-});
-
-test("an event recommendation still leads to an editable offline plan draft", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "View Beginner bouldering" }).click();
-  await page.getByRole("button", { name: "Make draft" }).click();
+  await page.getByRole("button", { name: /Beginner bouldering/ }).click();
+  await page.getByRole("button", { name: "Make a draft" }).click();
+  await page.getByRole("button", { name: "Use in draft" }).first().click();
   await page.getByLabel("Draft message").fill("Want to try bouldering next week?");
   await page.getByRole("button", { name: "Save draft, do not send" }).click();
   await expect(page.getByText("Want to try bouldering next week?")).toBeVisible();
   await expect(page.getByRole("button", { name: "Copy draft message" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Record planned" })).toBeVisible();
+});
+
+test("a person's contact card shows shared context and accepts an address", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "People" }).click();
+  await page.getByRole("button", { name: /Priya/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Priya" })).toBeVisible();
+  await page.getByLabel("Address").fill("14 Station St, Newtown");
+  await expect(page.getByLabel("Address")).toHaveValue("14 Station St, Newtown");
+  await expect(page.getByText("Beginner bouldering")).toBeVisible();
+  await page.getByRole("button", { name: "Back to people" }).click();
+  await expect(page.getByRole("heading", { name: "Your circle" })).toBeVisible();
 });
