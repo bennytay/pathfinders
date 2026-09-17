@@ -1,9 +1,8 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Circle
 
-# This is NOT the Next.js you know
+This repository has two independent parts:
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+- `backend/` — the executable AI backbone (Python/FastAPI). See `backend/README.md` for setup, the API contract, and how to run its deterministic test suite.
+- `ios/` — the native SwiftUI demo used for screen recordings. See `ios/README.md` to open and run it in a simulator.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+There is no web app in this repository. `docs/` holds product and architecture reference material, including the [Visual Person Intelligence backbone plan](docs/plans/ai-backbone.md) that `backend/` implements.
