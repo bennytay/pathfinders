@@ -1,0 +1,18 @@
+name: Feature request
+description: Propose a product change while preserving InnerCircle's privacy contract.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the user outcome, not only an implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and autonomy impact
+      description: Explain data collected, processing destination, and whether it could trigger social action.
+    validations:
+      required: true

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: { remotePatterns: [{ protocol: "https", hostname: "www.google.com", pathname: "/s2/favicons" }] },
+  // Playwright's local web server uses this loopback origin in the e2e base.
+  allowedDevOrigins: ["127.0.0.1"],
 };
 
 export default nextConfig;

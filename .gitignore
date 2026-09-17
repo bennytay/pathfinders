@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local-first product data and recordings must never be committed.
+/data/
+/recordings/
+*.sqlite
+*.sqlite-journal
+*.db
+
+# Playwright output
+/playwright-report/
+/test-results/
+/blob-report/
