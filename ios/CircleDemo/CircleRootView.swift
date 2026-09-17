@@ -205,15 +205,8 @@ struct ActivityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
-                Color.clear
-                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
-                    .overlay(
-                        Image(activity.id)
-                            .resizable()
-                            .scaledToFill()
-                    )
+                ActivityArtwork(activity: activity, cornerRadius: 12)
                     .overlay(LinearGradient(colors: [.black.opacity(0.02), .black.opacity(0.5)], startPoint: .top, endPoint: .bottom))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 Text((activity.tags.first ?? "Plan").capitalized)
                     .font(.system(size: 9, weight: .bold))
@@ -222,6 +215,10 @@ struct ActivityCard: View {
                     .padding(.vertical, 4)
                     .background(.white.opacity(0.9), in: Capsule())
                     .padding(8)
+
+                FriendAvatarStack(friends: friends)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
             }
 
             Text(activity.title)
@@ -232,11 +229,50 @@ struct ActivityCard: View {
                 .font(.system(size: 11))
                 .foregroundStyle(CirclePalette.muted)
                 .lineLimit(1)
-            Text("Fits \(friends.map(\.firstName).joined(separator: ", "))")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(CirclePalette.violetDeep)
-                .lineLimit(1)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(activity.title), suggested with \(friends.map(\.firstName).joined(separator: ", "))")
+    }
+}
+
+/// A compact face stack makes event matches legible without spending another
+/// line of card copy. The white rims keep each portrait distinct over imagery.
+struct FriendAvatarStack: View {
+    let friends: [Friend]
+
+    var body: some View {
+        HStack(spacing: -8) {
+            ForEach(Array(friends.prefix(3).reversed())) { friend in
+                Image(friend.imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 29, height: 29)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(.white.opacity(0.95), lineWidth: 2))
+                    .shadow(color: .black.opacity(0.28), radius: 3, y: 1)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+}
+
+/// Every event uses the same 4:3 artwork frame. `scaledToFit` deliberately
+/// preserves the full image, including portrait source photos, rather than
+/// cutting a performer or venue out at the edge of a card.
+struct ActivityArtwork: View {
+    let activity: Activity
+    var cornerRadius: CGFloat = 16
+
+    var body: some View {
+        ZStack {
+            CirclePalette.paper
+            Image(activity.id)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(4.0 / 3.0, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 }
 
@@ -899,14 +935,7 @@ struct GlassEventCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topLeading) {
-                Color.clear
-                    .aspectRatio(4.0 / 3.0, contentMode: .fit)
-                    .overlay(
-                        Image(activity.id)
-                            .resizable()
-                            .scaledToFill()
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                ActivityArtwork(activity: activity, cornerRadius: 16)
 
                 if let matchedInterest {
                     Text(matchedInterest.capitalized)
@@ -971,13 +1000,7 @@ struct EventDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     ZStack(alignment: .bottomLeading) {
-                        Image(activity.id)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 280)
-                            .frame(maxWidth: .infinity)
-                            .clipped()
-
+                        ActivityArtwork(activity: activity, cornerRadius: 28)
                         LinearGradient(colors: [.clear, .black.opacity(0.2), .black.opacity(0.72)], startPoint: .center, endPoint: .bottom)
 
                         VStack(alignment: .leading, spacing: 8) {
@@ -998,8 +1021,6 @@ struct EventDetailSheet: View {
                         .padding(18)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(height: 280)
-                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
                             .stroke(LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
