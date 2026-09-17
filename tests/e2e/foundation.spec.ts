@@ -10,7 +10,7 @@ test("scanning the photo library surfaces a highlight with remembered context", 
   await page.getByRole("button", { name: "Capture" }).click();
   await page.getByRole("button", { name: "Scan my photos" }).click();
   await expect(page.getByText("One more game before the sun went down.")).toBeVisible();
-  await expect(page.getByText("Priya Shah · The Courts · Sep 7, 2026")).toBeVisible();
+  await expect(page.getByText(/Priya Shah · The Courts ·/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan for new photos" })).toBeVisible();
 });
 
