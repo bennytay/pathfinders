@@ -1,16 +1,71 @@
 import SwiftUI
+import MapKit
+
+enum CircleType {
+    /// The rounded system face keeps Circle warm and personable without adding
+    /// a font dependency or compromising the iPhone's Dynamic Type support.
+    static func display(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
+
+    static func label(_ size: CGFloat, weight: Font.Weight = .heavy) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
+}
+
+/// A low-light indigo atmosphere behind every non-photographic surface. The
+/// fields drift slowly enough to feel ambient, not distracting.
+struct CircleAtmosphere: View {
+    @State private var drift = false
+
+    var body: some View {
+        ZStack {
+            CirclePalette.canvas
+            LinearGradient(
+                colors: [Color(red: 0.024, green: 0.021, blue: 0.052), Color(red: 0.035, green: 0.025, blue: 0.090), CirclePalette.canvas],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Circle()
+                .fill(CirclePalette.violet.opacity(0.22))
+                .frame(width: 360, height: 360)
+                .blur(radius: 96)
+                .offset(x: drift ? 155 : 95, y: drift ? -270 : -220)
+            Circle()
+                .fill(Color(red: 0.08, green: 0.36, blue: 0.54).opacity(0.18))
+                .frame(width: 310, height: 310)
+                .blur(radius: 104)
+                .offset(x: drift ? -145 : -85, y: drift ? 345 : 285)
+            Circle()
+                .fill(CirclePalette.mint.opacity(0.09))
+                .frame(width: 220, height: 220)
+                .blur(radius: 84)
+                .offset(x: drift ? 65 : 20, y: drift ? 210 : 155)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 13).repeatForever(autoreverses: true)) {
+                drift = true
+            }
+        }
+    }
+}
 
 struct CircleRootView: View {
     var body: some View {
-        TabView {
-            PlanView()
-                .tabItem { Label("Plan", systemImage: "calendar") }
-            CaptureView()
-                .tabItem { Label("Capture", systemImage: "sparkles") }
-            PeopleView()
-                .tabItem { Label("People", systemImage: "person.2") }
+        ZStack {
+            CircleAtmosphere()
+            TabView {
+                PlanView()
+                    .tabItem { Label("Plan", systemImage: "calendar") }
+                CaptureView()
+                    .tabItem { Label("Capture", systemImage: "sparkles") }
+                PeopleView()
+                    .tabItem { Label("People", systemImage: "person.2") }
+            }
+            .tint(CirclePalette.violet)
         }
-        .tint(CirclePalette.violet)
         .preferredColorScheme(.dark)
     }
 }
@@ -22,9 +77,10 @@ struct CircleHeader: View {
 
     var body: some View {
         HStack {
-            (Text("circle").foregroundStyle(CirclePalette.ink) + Text(".").foregroundStyle(CirclePalette.violet))
-                .font(.system(size: 22, weight: .bold, design: .rounded))
-                .tracking(-0.7)
+            Text("circle")
+                .foregroundStyle(CirclePalette.ink)
+                .font(CircleType.display(22, weight: .heavy))
+                .tracking(-0.4)
                 .onLongPressGesture(minimumDuration: 0.6) {
                     store.reset()
                 }
@@ -39,8 +95,8 @@ struct Eyebrow: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text)
-            .font(.system(size: 10, weight: .heavy))
-            .tracking(1.1)
+            .font(CircleType.label(10))
+            .tracking(0.7)
             .foregroundStyle(CirclePalette.violetDeep)
     }
 }
@@ -48,7 +104,7 @@ struct Eyebrow: View {
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 14, weight: .bold))
+            .font(CircleType.label(13, weight: .bold))
             .padding(.vertical, 14)
             .foregroundStyle(CirclePalette.canvas)
             .background(CirclePalette.violet.opacity(configuration.isPressed ? 0.8 : 1), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
@@ -68,10 +124,9 @@ struct PlanView: View {
                 CircleHeader()
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow("YOUR WEEK")
-                    Text("Make room for people.")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .tracking(-0.8)
+                    Text("Salutations, Benjamin")
+                        .font(CircleType.display(32, weight: .heavy))
+                        .tracking(-0.45)
                         .foregroundStyle(CirclePalette.ink)
                 }
 
@@ -79,9 +134,8 @@ struct PlanView: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Eyebrow("FOR YOUR CIRCLE")
-                        Text("Events worth doing together")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                        Text("Hangout plans")
+                            .font(CircleType.display(21, weight: .bold))
                             .foregroundStyle(CirclePalette.ink)
                     }
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
@@ -97,7 +151,7 @@ struct PlanView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
         }
-        .background(CirclePalette.canvas.ignoresSafeArea())
+        .background(CircleAtmosphere())
         .fullScreenCover(item: $selectedActivity) { activity in
             EventDetailSheet(activity: activity, friends: fittingFriends(for: activity))
         }
@@ -222,7 +276,8 @@ struct ActivityCard: View {
             }
 
             Text(activity.title)
-                .font(.system(size: 13, weight: .semibold))
+                .font(CircleType.display(15, weight: .bold))
+                .tracking(-0.1)
                 .foregroundStyle(CirclePalette.ink)
                 .lineLimit(1)
             Text("\(activity.location) · \(activity.details)")
@@ -288,7 +343,7 @@ struct CaptureView: View {
 
     var body: some View {
         ZStack {
-            CirclePalette.canvas.ignoresSafeArea()
+            CircleAtmosphere()
 
             if store.stage != .reel {
                 FloatingSpheresBackground()
@@ -413,7 +468,7 @@ struct GateCard: View {
                 .foregroundStyle(CirclePalette.violet)
             Eyebrow("PHOTO-NATIVE")
             Text("Let Circle learn your circle.")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(CircleType.display(24, weight: .heavy))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(CirclePalette.ink)
             Text("Circle scans the photos on this device for the friends you've already added, matching against the reference photo already on each profile. It never uploads a photo.")
@@ -456,7 +511,7 @@ struct ScanningCard: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(CirclePalette.violetDeep)
             Text("Looking for moments with your circle…")
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(CircleType.display(18, weight: .bold))
                 .foregroundStyle(CirclePalette.ink)
         }
         .frame(maxWidth: .infinity)
@@ -716,7 +771,7 @@ struct PeopleView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 40)
         }
-        .background(CirclePalette.canvas.ignoresSafeArea())
+        .background(CircleAtmosphere())
         .sheet(item: $selected) { friend in
             PersonDetailSheet(friend: friend)
         }
@@ -751,7 +806,7 @@ struct PersonCard: View {
                     }
 
                     Text(friend.firstName)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(CircleType.display(16, weight: .bold))
                         .foregroundStyle(CirclePalette.ink)
                 }
             }
@@ -791,7 +846,7 @@ struct PersonDetailSheet: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(friend.displayName)
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(CircleType.display(26, weight: .heavy))
                                 .foregroundStyle(.white)
                             Text(friend.interestSummary)
                                 .font(.system(size: 12.5, weight: .semibold))
@@ -831,7 +886,7 @@ struct PersonDetailSheet: View {
                     VStack(alignment: .leading, spacing: 14) {
                         Eyebrow("PERFECT TOGETHER")
                         Text("Things you two might like")
-                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .font(CircleType.display(22, weight: .bold))
                             .foregroundStyle(CirclePalette.ink)
 
                         LazyVGrid(columns: columns, spacing: 14) {
@@ -847,7 +902,7 @@ struct PersonDetailSheet: View {
                     .padding(.bottom, 30)
                 }
             }
-            .background(CirclePalette.canvas.ignoresSafeArea())
+            .background(CircleAtmosphere())
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
@@ -952,7 +1007,7 @@ struct GlassEventCard: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(activity.title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(CircleType.display(14, weight: .bold))
                     .foregroundStyle(CirclePalette.ink)
                     .lineLimit(1)
                 Text("\(activity.location) · \(activity.details)")
@@ -1012,7 +1067,7 @@ struct EventDetailSheet: View {
                                 .background(.ultraThinMaterial, in: Capsule())
                                 .environment(\.colorScheme, .dark)
                             Text(activity.title)
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(CircleType.display(26, weight: .heavy))
                                 .foregroundStyle(.white)
                             Text("\(activity.location) · \(activity.details)")
                                 .font(.system(size: 13, weight: .semibold))
@@ -1033,6 +1088,36 @@ struct EventDetailSheet: View {
                             .font(.system(size: 14))
                             .foregroundStyle(CirclePalette.muted)
                             .lineSpacing(3)
+                    }
+
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                        EventFactTile(icon: "calendar", label: "WHEN", value: activity.details)
+                        EventFactTile(icon: "figure.2", label: "BEST WITH", value: friends.isEmpty ? "Your circle" : friends.map(\.firstName).joined(separator: ", "))
+                        EventFactTile(icon: "clock", label: "TIME TO PLAN", value: venue.planningWindow)
+                        EventFactTile(icon: "sparkles", label: "VIBE", value: venue.vibe)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow("WHERE TO GO")
+                        Map(initialPosition: .region(venue.region)) {
+                            Marker(activity.location, coordinate: venue.coordinate)
+                        }
+                        .mapStyle(.standard)
+                        .frame(height: 190)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(CirclePalette.line, lineWidth: 1)
+                        )
+
+                        HStack(spacing: 8) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundStyle(CirclePalette.violetDeep)
+                            Text(venue.address)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(CirclePalette.muted)
+                            Spacer()
+                        }
                     }
 
                     if !friends.isEmpty {
@@ -1061,10 +1146,12 @@ struct EventDetailSheet: View {
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow("LINKS")
+                        Eyebrow("PLAN IT")
                         VStack(spacing: 10) {
-                            EventLinkRow(icon: "mappin.and.ellipse", title: "Get directions", subtitle: activity.location, url: directionsURL)
+                            EventLinkRow(icon: "map", title: "Open in Apple Maps", subtitle: venue.address, url: directionsURL)
+                            EventLinkRow(icon: "globe", title: "Open in Google Maps", subtitle: "Directions and reviews", url: googleMapsURL)
                             EventLinkRow(icon: "ticket.fill", title: "Find tickets", subtitle: "Search Eventbrite", url: eventbriteURL)
+                            EventLinkRow(icon: "building.2", title: "Visit venue site", subtitle: "Hours and event info", url: venueURL)
                             EventLinkRow(icon: "safari.fill", title: "Search the web", subtitle: "\(activity.title) · \(activity.location)", url: searchURL)
                         }
                     }
@@ -1073,16 +1160,23 @@ struct EventDetailSheet: View {
                 .safeAreaPadding(.horizontal, 20)
             }
         }
-        .background(CirclePalette.canvas.ignoresSafeArea())
+        .background(CircleAtmosphere())
     }
 
     private var aboutText: String {
-        "A \(activity.tags.first ?? "circle") pick at \(activity.location), \(activity.details.lowercased()). A relaxed, low-pressure way to spend time with the people you'd like to see more."
+        "A \(venue.vibe.lowercased()) \(activity.tags.first ?? "circle") plan at \(activity.location), \(activity.details.lowercased()). Make a low-pressure plan, send it to the people shown above, and keep the details in one place."
     }
+
+    private var venue: EventVenue { EventVenue.forActivity(activity) }
 
     private var directionsURL: URL {
         let query = activity.location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         return URL(string: "http://maps.apple.com/?q=\(query)")!
+    }
+
+    private var googleMapsURL: URL {
+        let query = "\(activity.location) \(venue.address)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "https://www.google.com/maps/search/?api=1&query=\(query)")!
     }
 
     private var eventbriteURL: URL {
@@ -1095,7 +1189,81 @@ struct EventDetailSheet: View {
         return URL(string: "https://www.google.com/search?q=\(query)")!
     }
 
+    private var venueURL: URL {
+        let query = "\(activity.location) official site".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        return URL(string: "https://www.google.com/search?q=\(query)")!
+    }
+
     private var shareText: String { "\(activity.title) at \(activity.location): \(activity.details)" }
+}
+
+struct EventFactTile: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(CirclePalette.violetDeep)
+            Text(label)
+                .font(CircleType.label(8, weight: .bold))
+                .foregroundStyle(CirclePalette.muted)
+            Text(value)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(CirclePalette.ink)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .padding(13)
+        .background(CirclePalette.paper.opacity(0.78), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(CirclePalette.line.opacity(0.85), lineWidth: 1)
+        )
+    }
+}
+
+struct EventVenue {
+    let coordinate: CLLocationCoordinate2D
+    let address: String
+    let planningWindow: String
+    let vibe: String
+
+    var region: MKCoordinateRegion {
+        MKCoordinateRegion(
+            center: coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
+        )
+    }
+
+    static func forActivity(_ activity: Activity) -> EventVenue {
+        switch activity.id {
+        case "beginner-bouldering":
+            EventVenue(coordinate: .init(latitude: -33.891, longitude: 151.183), address: "2–14 Wilson St, Newtown", planningWindow: "Book by Tuesday", vibe: "Active and easy")
+        case "clay-social":
+            EventVenue(coordinate: .init(latitude: -33.885, longitude: 151.210), address: "18 Goodhope St, Paddington", planningWindow: "Spaces move fast", vibe: "Hands-on and slow")
+        case "harbour-jazz":
+            EventVenue(coordinate: .init(latitude: -33.891, longitude: 151.174), address: "42 King St, Newtown", planningWindow: "Arrive by 7:30pm", vibe: "Late-night and lively")
+        case "rooftop-cinema", "foreign-film":
+            EventVenue(coordinate: .init(latitude: -33.881, longitude: 151.212), address: "80 Commonwealth St, Surry Hills", planningWindow: "Choose seats early", vibe: "Relaxed and cinematic")
+        case "run-club", "park-pilates":
+            EventVenue(coordinate: .init(latitude: -33.870, longitude: 151.200), address: "Darling Harbour, Sydney", planningWindow: "Just show up", vibe: "Fresh-air and social")
+        case "vintage-market", "record-fair":
+            EventVenue(coordinate: .init(latitude: -33.898, longitude: 151.187), address: "245 Wilson St, Eveleigh", planningWindow: "Best before lunch", vibe: "Wandering and curious")
+        case "silent-reading", "book-launch":
+            EventVenue(coordinate: .init(latitude: -33.881, longitude: 151.220), address: "Surry Hills, Sydney", planningWindow: "Save a spot", vibe: "Quiet and thoughtful")
+        case "warehouse-dance", "open-mic":
+            EventVenue(coordinate: .init(latitude: -33.900, longitude: 151.174), address: "Marrickville, Sydney", planningWindow: "Doors open early", vibe: "Noisy and spontaneous")
+        case "morning-swim":
+            EventVenue(coordinate: .init(latitude: -33.891, longitude: 151.277), address: "1 Notts Ave, Bondi Beach", planningWindow: "Meet at sunrise", vibe: "Bracing and bright")
+        case "night-market", "pasta-club":
+            EventVenue(coordinate: .init(latitude: -33.880, longitude: 151.206), address: "Haymarket, Sydney", planningWindow: "Go hungry", vibe: "Loose and delicious")
+        default:
+            EventVenue(coordinate: .init(latitude: -33.883, longitude: 151.205), address: "Sydney, NSW", planningWindow: "Make a plan this week", vibe: "Easygoing and local")
+        }
+    }
 }
 
 struct EventLinkRow: View {
