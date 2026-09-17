@@ -93,6 +93,18 @@ static NSString * const ACImageNameRunClub AC_SWIFT_PRIVATE = @"run-club";
 /// The "silent-reading" asset catalog image resource.
 static NSString * const ACImageNameSilentReading AC_SWIFT_PRIVATE = @"silent-reading";
 
+/// The "social-instagram" asset catalog image resource.
+static NSString * const ACImageNameSocialInstagram AC_SWIFT_PRIVATE = @"social-instagram";
+
+/// The "social-snapchat" asset catalog image resource.
+static NSString * const ACImageNameSocialSnapchat AC_SWIFT_PRIVATE = @"social-snapchat";
+
+/// The "social-whatsapp" asset catalog image resource.
+static NSString * const ACImageNameSocialWhatsapp AC_SWIFT_PRIVATE = @"social-whatsapp";
+
+/// The "social-x" asset catalog image resource.
+static NSString * const ACImageNameSocialX AC_SWIFT_PRIVATE = @"social-x";
+
 /// The "spikeball" asset catalog image resource.
 static NSString * const ACImageNameSpikeball AC_SWIFT_PRIVATE = @"spikeball";
 
