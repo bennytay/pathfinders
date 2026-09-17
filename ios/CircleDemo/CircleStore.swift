@@ -13,6 +13,8 @@ final class CircleStore: ObservableObject {
     @Published var stage: CaptureStage = .gate
     /// Personal, hand-written notes per friend — yours, not generated.
     @Published var personalNotes: [String: String] = CircleStore.demoPersonalNotes
+    /// The sole explicit reel-preference signal — a star. No dislike/downvote exists.
+    @Published var starredHighlightIDs: Set<String> = []
 
     let friends: [Friend] = CircleStore.demoFriends
     let activities: [Activity] = CircleStore.demoActivities
@@ -37,6 +39,17 @@ final class CircleStore: ObservableObject {
 
     func reset() {
         stage = .gate
+        starredHighlightIDs = []
+    }
+
+    /// Tap to star, tap again to remove the star — fully reversible, and the
+    /// only positive/negative-adjacent signal there is.
+    func toggleStar(_ highlightID: String) {
+        if starredHighlightIDs.contains(highlightID) {
+            starredHighlightIDs.remove(highlightID)
+        } else {
+            starredHighlightIDs.insert(highlightID)
+        }
     }
 
     func friendName(_ id: String) -> String {
@@ -88,24 +101,24 @@ final class CircleStore: ObservableObject {
     ]
 
     static let demoActivities: [Activity] = [
-        Activity(id: "beginner-bouldering", title: "Beginner bouldering", details: "Wed, 6:30pm", location: "The Bouldering Project", tags: ["bouldering", "climbing"]),
-        Activity(id: "clay-social", title: "Clay social", details: "Thu, 7pm", location: "Kil.n Studio", tags: ["ceramics", "clay"]),
-        Activity(id: "harbour-jazz", title: "Harbour jazz club", details: "Thu, 8pm", location: "The Vanguard", tags: ["live music", "jazz"]),
-        Activity(id: "rooftop-cinema", title: "Rooftop cinema", details: "Fri, 7:15pm", location: "Golden Age", tags: ["film", "cinema"]),
-        Activity(id: "run-club", title: "Run club to happy hour", details: "Sat, 9am", location: "Darling Harbour", tags: ["running", "run"]),
-        Activity(id: "vintage-market", title: "Sunday vintage market", details: "Sun, 10am", location: "Carriageworks", tags: ["vintage", "market"]),
-        Activity(id: "figure-drawing", title: "Figure drawing night", details: "Sun, 6pm", location: "The Studio", tags: ["drawing", "art"]),
-        Activity(id: "silent-reading", title: "Silent reading hour", details: "Mon, 6pm", location: "Sappho Books", tags: ["books", "reading"]),
-        Activity(id: "warehouse-dance", title: "Warehouse dance class", details: "Mon, 7:30pm", location: "Red Rattler", tags: ["dance", "movement"]),
-        Activity(id: "night-market", title: "Night noodle market", details: "Tue, 6pm", location: "Haymarket", tags: ["food", "dinner"]),
-        Activity(id: "open-mic", title: "Open mic at the pub", details: "Tue, 8pm", location: "The Bearded Tit", tags: ["live music", "music"]),
-        Activity(id: "morning-swim", title: "Early ocean swim", details: "Wed, 7am", location: "Bondi Icebergs", tags: ["running", "movement"]),
-        Activity(id: "zine-fair", title: "Small press zine fair", details: "Sat, 11am", location: "UTS Gallery", tags: ["drawing", "books"]),
-        Activity(id: "pasta-club", title: "Pasta club", details: "Sat, 7pm", location: "Pellegrino 2000", tags: ["food", "dinner"]),
-        Activity(id: "foreign-film", title: "Foreign film night", details: "Sun, 5pm", location: "Chauvel Cinema", tags: ["film", "cinema"]),
-        Activity(id: "record-fair", title: "Record fair", details: "Sun, 12pm", location: "Oxford Art Factory", tags: ["live music", "music"]),
-        Activity(id: "park-pilates", title: "Park pilates", details: "Next Mon, 6pm", location: "Victoria Park", tags: ["dance", "movement"]),
-        Activity(id: "book-launch", title: "Book launch and drinks", details: "Next Tue, 7pm", location: "Gleebooks", tags: ["books", "reading"]),
+        Activity(id: "beginner-bouldering", title: "Beginner bouldering", details: "Wed, 6:30pm", location: "The Bouldering Project", tags: ["bouldering", "climbing"], category: .moveYourBody),
+        Activity(id: "clay-social", title: "Clay social", details: "Thu, 7pm", location: "Kil.n Studio", tags: ["ceramics", "clay"], category: .sideQuests),
+        Activity(id: "harbour-jazz", title: "Harbour jazz club", details: "Thu, 8pm", location: "The Vanguard", tags: ["live music", "jazz"], category: .sponsored),
+        Activity(id: "rooftop-cinema", title: "Rooftop cinema", details: "Fri, 7:15pm", location: "Golden Age", tags: ["film", "cinema"], category: .sponsored),
+        Activity(id: "run-club", title: "Run club to happy hour", details: "Sat, 9am", location: "Darling Harbour", tags: ["running", "run"], category: .moveYourBody),
+        Activity(id: "vintage-market", title: "Sunday vintage market", details: "Sun, 10am", location: "Carriageworks", tags: ["vintage", "market"], category: .popupsAndMarkets),
+        Activity(id: "figure-drawing", title: "Figure drawing night", details: "Sun, 6pm", location: "The Studio", tags: ["drawing", "art"], category: .sideQuests),
+        Activity(id: "silent-reading", title: "Silent reading hour", details: "Mon, 6pm", location: "Sappho Books", tags: ["books", "reading"], category: .sideQuests),
+        Activity(id: "warehouse-dance", title: "Warehouse dance class", details: "Mon, 7:30pm", location: "Red Rattler", tags: ["dance", "movement"], category: .moveYourBody),
+        Activity(id: "night-market", title: "Night noodle market", details: "Tue, 6pm", location: "Haymarket", tags: ["food", "dinner"], category: .popupsAndMarkets),
+        Activity(id: "open-mic", title: "Open mic at the pub", details: "Tue, 8pm", location: "The Bearded Tit", tags: ["live music", "music"], category: .afterHours),
+        Activity(id: "morning-swim", title: "Early ocean swim", details: "Wed, 7am", location: "Bondi Icebergs", tags: ["running", "movement"], category: .moveYourBody),
+        Activity(id: "zine-fair", title: "Small press zine fair", details: "Sat, 11am", location: "UTS Gallery", tags: ["drawing", "books"], category: .popupsAndMarkets),
+        Activity(id: "pasta-club", title: "Pasta club", details: "Sat, 7pm", location: "Pellegrino 2000", tags: ["food", "dinner"], category: .afterHours),
+        Activity(id: "foreign-film", title: "Foreign film night", details: "Sun, 5pm", location: "Chauvel Cinema", tags: ["film", "cinema"], category: .afterHours),
+        Activity(id: "record-fair", title: "Record fair", details: "Sun, 12pm", location: "Oxford Art Factory", tags: ["live music", "music"], category: .afterHours),
+        Activity(id: "park-pilates", title: "Park pilates", details: "Next Mon, 6pm", location: "Victoria Park", tags: ["dance", "movement"], category: .moveYourBody),
+        Activity(id: "book-launch", title: "Book launch and drinks", details: "Next Tue, 7pm", location: "Gleebooks", tags: ["books", "reading"], category: .sideQuests),
     ]
 
     static let demoCalendarEvents: [CalendarEvent] = [

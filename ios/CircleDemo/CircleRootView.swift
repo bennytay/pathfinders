@@ -132,18 +132,28 @@ struct PlanView: View {
 
                 MiniCalendarView(events: store.calendarEvents)
 
-                VStack(alignment: .leading, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Hangout plans")
-                            .font(CircleType.display(21, weight: .bold))
-                            .foregroundStyle(CirclePalette.ink)
-                    }
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
-                        ForEach(store.activities) { activity in
-                            Button(action: { selectedActivity = activity }) {
-                                ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Hangout plans")
+                        .font(CircleType.display(21, weight: .bold))
+                        .foregroundStyle(CirclePalette.ink)
+                }
+
+                ForEach(ActivityCategory.displayOrder, id: \.self) { category in
+                    let activities = store.activities.filter { $0.category == category }
+                    if !activities.isEmpty {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text(category.title)
+                                .font(CircleType.label(13))
+                                .tracking(0.4)
+                                .foregroundStyle(category == .sponsored ? CirclePalette.peach : CirclePalette.violetDeep)
+                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
+                                ForEach(activities) { activity in
+                                    Button(action: { selectedActivity = activity }) {
+                                        ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -350,24 +360,43 @@ struct CaptureView: View {
                     .ignoresSafeArea()
             }
 
-            VStack(alignment: .leading, spacing: 20) {
-                CircleHeader()
-                    .padding(.horizontal, 20)
-
-                switch store.stage {
-                case .gate:
+            switch store.stage {
+            case .gate:
+                VStack(alignment: .leading, spacing: 20) {
+                    Color.clear.frame(height: 44)
                     GateCard(onScan: { store.startScan() })
-                        .padding(.horizontal, 20)
                     Spacer()
-                case .scanning:
-                    ScanningCard()
-                        .padding(.horizontal, 20)
-                    Spacer()
-                case .reel:
-                    HighlightReel()
                 }
+                .padding(.horizontal, 20)
+            case .scanning:
+                VStack(alignment: .leading, spacing: 20) {
+                    Color.clear.frame(height: 44)
+                    ScanningCard()
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+            case .reel:
+                // Full-bleed top-to-bottom-tab-bar: the photo fills the whole
+                // width and reaches under the status bar, but respects the
+                // bottom safe area so the caption/star row stays above the
+                // tab bar instead of being covered by it.
+                HighlightReel()
+                    .ignoresSafeArea(edges: [.top, .horizontal])
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
+            VStack {
+                ZStack(alignment: .top) {
+                    if store.stage == .reel {
+                        LinearGradient(colors: [.black.opacity(0.42), .clear], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 90)
+                            .allowsHitTesting(false)
+                    }
+                    CircleHeader()
+                        .padding(.horizontal, 20)
+                        .padding(.top, store.stage == .reel ? 6 : 0)
+                }
+                Spacer()
+            }
 
             if store.stage == .reel {
                 MicButton(state: $micState)
@@ -521,10 +550,14 @@ struct ScanningCard: View {
 }
 
 /// A full-screen photo reel that advances every 7 seconds while keeping its
-/// controls and captions inside the iPhone's readable area.
+/// controls and captions inside the iPhone's readable area. Ordering comes
+/// from the deterministic ReelRanking algorithm, which favors photos like
+/// the ones a person has starred while still keeping the reel varied.
 struct HighlightReel: View {
     @EnvironmentObject private var store: CircleStore
     @State private var index = 0
+    @State private var reasonOpenIndex: Int?
+    @State private var asOf = Date()
 
     private let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
     private static let dateFormatter: DateFormatter = {
@@ -534,26 +567,28 @@ struct HighlightReel: View {
     }()
 
     var body: some View {
-        let highlights = store.highlights
+        let ranked = ReelRanking.rank(highlights: store.highlights, starredIDs: store.starredHighlightIDs, asOf: asOf)
         Group {
-            if highlights.isEmpty {
+            if ranked.isEmpty {
                 Color.clear
             } else {
-                let current = highlights[index % highlights.count]
+                let current = ranked[index % ranked.count]
+                let isStarred = store.starredHighlightIDs.contains(current.highlight.id)
+                let showReason = reasonOpenIndex == index
                 GeometryReader { proxy in
                     ZStack {
-                        Image(current.imageName)
+                        Image(current.highlight.imageName)
                             .resizable()
                             .scaledToFill()
                             .frame(width: proxy.size.width, height: proxy.size.height)
                             .clipped()
-                            .id(current.id)
+                            .id(current.highlight.id)
                             .transition(.opacity)
 
                         LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)], startPoint: .center, endPoint: .bottom)
 
                         VStack(spacing: 0) {
-                            SlidingProgressBar(total: highlights.count, index: index, cycleDuration: 7)
+                            SlidingProgressBar(total: ranked.count, index: index, cycleDuration: 7)
                                 .padding(.horizontal, 16)
                                 .padding(.top, 10)
 
@@ -571,22 +606,66 @@ struct HighlightReel: View {
 
                             Spacer()
 
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(current.caption)
-                                    .font(.system(size: 23, weight: .semibold, design: .serif))
+                            // Keyed and transitioned together with the image above so the
+                            // whole card swaps as one unit — an untagged Text here would
+                            // otherwise interpolate its layout mid-animation and visibly
+                            // ghost the outgoing and incoming captions on top of each other.
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(current.highlight.caption)
+                                    .font(.system(size: 15, weight: .semibold, design: .serif))
                                     .italic()
                                     .lineLimit(2)
                                     .foregroundStyle(.white)
-                                    .shadow(color: .black.opacity(0.5), radius: 8)
-                                Text(captionMeta(current))
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .lineLimit(2)
-                                    .foregroundStyle(.white.opacity(0.85))
+                                    .shadow(color: .black.opacity(0.5), radius: 6)
+                                Text(captionMeta(current.highlight))
+                                    .font(.system(size: 10.5, weight: .semibold))
+                                    .lineLimit(1)
+                                    .foregroundStyle(.white.opacity(0.8))
+
+                                HStack(spacing: 8) {
+                                    Button(action: { store.toggleStar(current.highlight.id) }) {
+                                        HStack(spacing: 5) {
+                                            Image(systemName: isStarred ? "star.fill" : "star")
+                                                .font(.system(size: 10.5, weight: .semibold))
+                                            Text(isStarred ? "Saved" : "Save this feeling")
+                                                .font(.system(size: 11, weight: .bold))
+                                        }
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(isStarred ? CirclePalette.peach.opacity(0.22) : Color.black.opacity(0.35), in: Capsule())
+                                        .overlay(Capsule().stroke(isStarred ? CirclePalette.peach : Color.white.opacity(0.35), lineWidth: 1))
+                                        .foregroundStyle(isStarred ? CirclePalette.peach : .white)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    Button(action: {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            reasonOpenIndex = showReason ? nil : index
+                                        }
+                                    }) {
+                                        Text("Why this photo?")
+                                            .font(.system(size: 10.5, weight: .semibold))
+                                            .underline()
+                                            .foregroundStyle(.white.opacity(0.78))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.top, 1)
+
+                                if showReason {
+                                    Text(ReelRanking.explain(current.reason, friendName: store.friendName))
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.white.opacity(0.92))
+                                        .padding(.top, 1)
+                                        .transition(.opacity)
+                                }
                             }
                             .padding(.horizontal, 18)
                             .padding(.trailing, 92)
                             .padding(.bottom, 14)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .id(current.highlight.id)
+                            .transition(.opacity)
                         }
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height)
@@ -602,8 +681,9 @@ struct HighlightReel: View {
 
     private func advance() {
         guard !store.highlights.isEmpty else { return }
+        reasonOpenIndex = nil
         withAnimation(.easeInOut(duration: 0.3)) {
-            index = (index + 1) % store.highlights.count
+            index += 1
         }
     }
 

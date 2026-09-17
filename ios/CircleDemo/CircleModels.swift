@@ -61,12 +61,30 @@ struct CalendarEvent: Identifiable {
     let tone: EventTone
 }
 
+enum ActivityCategory: String, CaseIterable {
+    case sponsored, sideQuests, afterHours, popupsAndMarkets, moveYourBody
+
+    /// Display order for the Find events page — sponsored always leads.
+    static var displayOrder: [ActivityCategory] { [.sponsored, .sideQuests, .afterHours, .popupsAndMarkets, .moveYourBody] }
+
+    var title: String {
+        switch self {
+        case .sponsored: return "Sponsored"
+        case .sideQuests: return "Side quests"
+        case .afterHours: return "After hours"
+        case .popupsAndMarkets: return "Popups and markets"
+        case .moveYourBody: return "Move your body"
+        }
+    }
+}
+
 struct Activity: Identifiable {
     let id: String
     let title: String
     let details: String
     let location: String
     let tags: [String]
+    let category: ActivityCategory
 }
 
 /// Tolerant, case-insensitive overlap check between an activity's tags and a
