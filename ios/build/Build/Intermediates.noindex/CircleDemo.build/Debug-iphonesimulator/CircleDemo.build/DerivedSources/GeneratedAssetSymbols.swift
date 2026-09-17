@@ -109,6 +109,18 @@ extension DeveloperToolsSupport.ImageResource {
     /// The "silent-reading" asset catalog image resource.
     static let silentReading = DeveloperToolsSupport.ImageResource(name: "silent-reading", bundle: resourceBundle)
 
+    /// The "social-instagram" asset catalog image resource.
+    static let socialInstagram = DeveloperToolsSupport.ImageResource(name: "social-instagram", bundle: resourceBundle)
+
+    /// The "social-snapchat" asset catalog image resource.
+    static let socialSnapchat = DeveloperToolsSupport.ImageResource(name: "social-snapchat", bundle: resourceBundle)
+
+    /// The "social-whatsapp" asset catalog image resource.
+    static let socialWhatsapp = DeveloperToolsSupport.ImageResource(name: "social-whatsapp", bundle: resourceBundle)
+
+    /// The "social-x" asset catalog image resource.
+    static let socialX = DeveloperToolsSupport.ImageResource(name: "social-x", bundle: resourceBundle)
+
     /// The "spikeball" asset catalog image resource.
     static let spikeball = DeveloperToolsSupport.ImageResource(name: "spikeball", bundle: resourceBundle)
 

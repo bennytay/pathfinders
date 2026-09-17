@@ -4,11 +4,29 @@ import SwiftUI
 struct Friend: Identifiable, Hashable {
     let id: String
     let displayName: String
-    let interest: String
+    /// A small cluster of interest tags (drawn from the same vocabulary as
+    /// `Activity.tags`) standing in for a richer personality/interest profile,
+    /// so matching turns up more than one activity per person.
+    let interests: [String]
+    /// A one-line personality read, shown alongside the interest cluster —
+    /// not used for matching, just texture.
+    let personality: String
     let imageName: String
 
     var firstName: String { displayName.split(separator: " ").first.map(String.init) ?? displayName }
     var initials: String { displayName.split(separator: " ").compactMap { $0.first }.map(String.init).joined() }
+    var interestSummary: String { interests.map { $0.capitalized }.joined(separator: " · ") }
+
+    /// Synthetic handles derived from the fixture name, purely for demo "connect" links.
+    private var socialHandle: String { displayName.lowercased().replacingOccurrences(of: " ", with: "") }
+    var instagramURL: URL { URL(string: "https://instagram.com/\(socialHandle)")! }
+    var xURL: URL { URL(string: "https://x.com/\(socialHandle)")! }
+    var snapchatURL: URL { URL(string: "https://snapchat.com/add/\(socialHandle)")! }
+    var whatsAppURL: URL {
+        let seed = id.utf8.reduce(0) { $0 + Int($1) }
+        let digits = 2_000_000_000 + (seed * 9_973) % 800_000_000
+        return URL(string: "https://wa.me/1\(digits)")!
+    }
 }
 
 struct Highlight: Identifiable {
@@ -49,4 +67,32 @@ struct Activity: Identifiable {
     let details: String
     let location: String
     let tags: [String]
+}
+
+/// Tolerant, case-insensitive overlap check between an activity's tags and a
+/// friend's interest cluster — the shared core of the recommendation "engine"
+/// used both to find activities for a friend and friends for an activity.
+func tagsOverlap(_ tags: [String], _ interests: [String]) -> Bool {
+    tags.contains { tag in
+        interests.contains { interest in
+            interest.lowercased() == tag.lowercased() ||
+            interest.lowercased().contains(tag.lowercased()) ||
+            tag.lowercased().contains(interest.lowercased())
+        }
+    }
+}
+
+/// The first interest that explains why an activity was recommended, for
+/// display in "why this fits" copy.
+func matchedInterest(tags: [String], interests: [String]) -> String? {
+    for interest in interests {
+        for tag in tags {
+            if interest.lowercased() == tag.lowercased() ||
+                interest.lowercased().contains(tag.lowercased()) ||
+                tag.lowercased().contains(interest.lowercased()) {
+                return tag
+            }
+        }
+    }
+    return nil
 }
