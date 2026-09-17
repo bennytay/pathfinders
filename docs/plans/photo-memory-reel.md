@@ -243,4 +243,3 @@ Keep fixture images and local browser storage for the present demo. Implement th
 - No full-library background scan in the first implementation.
 - No exact home/work location display.
 - No social feed, sharing count, streak, engagement target, or social comparison.
-
