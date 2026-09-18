@@ -13,8 +13,8 @@ Native SwiftUI version of the current Circle demo, tuned for an iPhone screen re
 To capture the demo, use Simulator → File → Record Screen.
 
 ## Suggested demo sequence
-1. On Plan, scroll the compact weekly calendar (note the glowing "AI pick" run club event), then scroll through the event grid of things to do together.
-2. In Capture, tap **Scan my photos**, watch the brief scanning animation, then let the full-screen highlight reel auto-advance through real photos. Tap the mic button bottom-right to show the simulated "Listening… → Saved" voice-note sequence.
+1. On Plan, check the compact weekly calendar, then browse the event grid. Tap an event card for the detail. Open **Map** in the leftmost glass navigation item to pan around nearby events, tap a numbered neighbourhood pin, and pull up the events drawer for the full category grid.
+2. In Capture, tap **Give access to full library**, choose **Allow Full Access** in the simulated permission prompt, then watch the brief scanning animation. The full-screen highlight reel then auto-advances through real photos.
 3. In People, browse the photo grid, then tap a friend to open their detail sheet.
 
 Long-press the **circle.** wordmark (top-left, on any tab) to reset Capture back to its initial gate state so the scan sequence can be replayed for another take.

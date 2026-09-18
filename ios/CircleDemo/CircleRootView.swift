@@ -53,20 +53,155 @@ struct CircleAtmosphere: View {
 }
 
 struct CircleRootView: View {
+    @State private var selectedTab: CircleTab = .plan
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             CircleAtmosphere()
-            TabView {
-                PlanView()
-                    .tabItem { Label("Plan", systemImage: "calendar") }
-                CaptureView()
-                    .tabItem { Label("Capture", systemImage: "sparkles") }
-                PeopleView()
-                    .tabItem { Label("People", systemImage: "person.2") }
-            }
-            .tint(CirclePalette.violet)
+            selectedContent
+                // Reserve room for the floating bar without making it part of
+                // the destination's hit-test hierarchy.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear
+                        .frame(height: 76)
+                        .allowsHitTesting(false)
+                }
+
+            LiquidGlassNavigation(selection: $selectedTab)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 6)
+                .zIndex(1)
         }
         .preferredColorScheme(.dark)
+    }
+
+    @ViewBuilder
+    private var selectedContent: some View {
+        switch selectedTab {
+        case .map:
+            MapView()
+        case .plan:
+            PlanView()
+        case .capture:
+            CaptureView()
+        case .people:
+            PeopleView()
+        }
+    }
+}
+
+private enum CircleTab: CaseIterable, Hashable {
+    case map, plan, capture, people
+
+    var title: String {
+        switch self {
+        case .map: return "Map"
+        case .plan: return "Plan"
+        case .capture: return "Capture"
+        case .people: return "People"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .map: return "map.fill"
+        case .plan: return "calendar"
+        case .capture: return "sparkles"
+        case .people: return "person.2"
+        }
+    }
+}
+
+/// This is a deliberately self-contained glass treatment. It has a translucent
+/// tint and a light-catching edge, but does not ask MapKit or the system tab
+/// bar to provide a second material backdrop.
+private struct LiquidGlassNavigation: View {
+    @Binding var selection: CircleTab
+
+    var body: some View {
+        Group {
+            if #available(iOS 26.0, *) {
+                navigationContent
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
+            } else {
+                navigationContent
+                    .background {
+                        Capsule(style: .continuous)
+                            .fill(CirclePalette.paper.opacity(0.88))
+                            .overlay {
+                                LinearGradient(
+                                    colors: [
+                                        CirclePalette.ink.opacity(0.15),
+                                        CirclePalette.violet.opacity(0.08),
+                                        CirclePalette.canvas.opacity(0.18)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                .clipShape(Capsule(style: .continuous))
+                            }
+                    }
+                    .overlay {
+                        Capsule(style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [CirclePalette.ink.opacity(0.38), CirclePalette.ink.opacity(0.08)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    }
+            }
+        }
+        .shadow(color: CirclePalette.canvas.opacity(0.42), radius: 12, y: 5)
+    }
+
+    private var navigationContent: some View {
+        HStack(spacing: 4) {
+            ForEach(CircleTab.allCases, id: \.self) { tab in
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        selection = tab
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.symbol)
+                            .font(.system(size: 16, weight: .semibold))
+                        Text(tab.title)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(selection == tab ? CirclePalette.canvas : CirclePalette.ink.opacity(0.74))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .contentShape(Rectangle())
+                    .background {
+                        if selection == tab {
+                            selectedTabSurface
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(selection == tab ? .isSelected : [])
+            }
+        }
+        .padding(5)
+        .contentShape(Capsule(style: .continuous))
+        .allowsHitTesting(true)
+    }
+
+    @ViewBuilder
+    private var selectedTabSurface: some View {
+        if #available(iOS 26.0, *) {
+            Capsule(style: .continuous)
+                .fill(.clear)
+                .glassEffect(.regular.tint(CirclePalette.violet), in: Capsule(style: .continuous))
+        } else {
+            Capsule(style: .continuous)
+                .fill(CirclePalette.violet)
+                .shadow(color: CirclePalette.violet.opacity(0.30), radius: 10, y: 3)
+        }
     }
 }
 
@@ -77,6 +212,7 @@ struct CircleHeader: View {
 
     var body: some View {
         HStack {
+            ProfileMenuButton()
             Text("circle")
                 .foregroundStyle(CirclePalette.ink)
                 .font(CircleType.display(22, weight: .heavy))
@@ -87,6 +223,119 @@ struct CircleHeader: View {
             Spacer()
         }
         .padding(.top, 4)
+    }
+}
+
+/// A quiet identity marker that keeps the map and reel personal without
+/// turning the avatar into another settings destination.
+struct ProfileMenuButton: View {
+    @EnvironmentObject private var store: CircleStore
+
+    var body: some View {
+        Image(store.profileImageName)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 42, height: 42)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(CirclePalette.violetDeep, lineWidth: 2))
+            .shadow(color: .black.opacity(0.28), radius: 5, y: 2)
+            .accessibilityHidden(true)
+    }
+}
+
+struct ProfileEditor: View {
+    @EnvironmentObject private var store: CircleStore
+    @Environment(\.dismiss) private var dismiss
+    private let profileImages = ["isla-morgan", "priya-shah", "hana-kim", "arjun-patel", "rohan-mehta"]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    VStack(spacing: 10) {
+                        Image(store.profileImageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 104, height: 104)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(CirclePalette.violet, lineWidth: 3))
+
+                        Text("Choose a profile photo")
+                            .font(CircleType.display(15, weight: .bold))
+                            .foregroundStyle(CirclePalette.ink)
+
+                        HStack(spacing: 12) {
+                            ForEach(profileImages, id: \.self) { imageName in
+                                Button { store.profileImageName = imageName } label: {
+                                    Image(imageName)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 48, height: 48)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(imageName == store.profileImageName ? CirclePalette.violet : CirclePalette.line, lineWidth: imageName == store.profileImageName ? 3 : 1))
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Use this profile photo")
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    profileField("Name", text: $store.profileName, prompt: "Your name")
+                    profileField("Your neighbourhood", text: $store.profileNeighbourhood, prompt: "Suburb, city")
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("A little about you")
+                            .font(CircleType.display(15, weight: .bold))
+                            .foregroundStyle(CirclePalette.ink)
+                        TextField("What kinds of plans do you love?", text: $store.profileBio, axis: .vertical)
+                            .lineLimit(3...5)
+                            .font(.system(size: 15))
+                            .foregroundStyle(CirclePalette.ink)
+                            .padding(14)
+                            .background(CirclePalette.paper, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).stroke(CirclePalette.line, lineWidth: 1))
+                    }
+
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(CirclePalette.mint)
+                        Text("These details stay on this device. Circle only uses them to make local suggestions feel more like you.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(CirclePalette.muted)
+                    }
+                    .padding(14)
+                    .background(CirclePalette.violetSoft, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                }
+                .padding(20)
+                .padding(.bottom, 30)
+            }
+            .background(CircleAtmosphere())
+            .navigationTitle("Your profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .font(CircleType.display(15, weight: .bold))
+                        .foregroundStyle(CirclePalette.violetDeep)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func profileField(_ label: String, text: Binding<String>, prompt: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(CircleType.display(15, weight: .bold))
+                .foregroundStyle(CirclePalette.ink)
+            TextField(prompt, text: text)
+                .font(.system(size: 15))
+                .foregroundStyle(CirclePalette.ink)
+                .padding(14)
+                .background(CirclePalette.paper, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).stroke(CirclePalette.line, lineWidth: 1))
+        }
     }
 }
 
@@ -114,20 +363,169 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 // MARK: - Plan tab
 
+struct MapView: View {
+    @EnvironmentObject private var store: CircleStore
+    @State private var selectedCluster: MapCluster?
+    @State private var cameraPosition = MapCameraPosition.region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: -33.8890, longitude: 151.2120),
+            span: MKCoordinateSpan(latitudeDelta: 0.050, longitudeDelta: 0.055)
+        )
+    )
+
+    private let homeCoordinate = CLLocationCoordinate2D(latitude: -33.8845, longitude: 151.2110)
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Map(position: $cameraPosition, interactionModes: .all) {
+                Annotation("You are here", coordinate: homeCoordinate, anchor: .center) {
+                    ZStack {
+                        Circle().fill(CirclePalette.violet.opacity(0.20)).frame(width: 54, height: 54)
+                        Circle().fill(CirclePalette.violet).frame(width: 30, height: 30)
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(CirclePalette.canvas)
+                    }
+                    .accessibilityLabel("You are here, Surry Hills")
+                }
+
+                ForEach(store.mapClusters) { cluster in
+                    Annotation(cluster.name, coordinate: cluster.coordinate, anchor: .bottom) {
+                        Button {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                selectedCluster = cluster
+                            }
+                        } label: {
+                            MapClusterMarker(
+                                symbol: symbol(for: cluster),
+                                count: cluster.activityIDs.count,
+                                isSelected: selectedCluster?.id == cluster.id
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(cluster.activityIDs.count) nearby plans in \(cluster.name)")
+                    }
+                }
+            }
+            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
+            .preferredColorScheme(.light)
+            .ignoresSafeArea(edges: [.top, .horizontal])
+
+            VStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    ProfileMenuButton()
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("NEAR YOU")
+                            .font(CircleType.label(9))
+                            .tracking(0.8)
+                            .foregroundStyle(CirclePalette.violetDeep)
+                        Text(store.profileNeighbourhood)
+                            .font(CircleType.display(14, weight: .bold))
+                            .foregroundStyle(CirclePalette.ink)
+                    }
+                    Spacer()
+                    Button {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            cameraPosition = .region(MKCoordinateRegion(
+                                center: homeCoordinate,
+                                span: MKCoordinateSpan(latitudeDelta: 0.032, longitudeDelta: 0.036)
+                            ))
+                        }
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(CirclePalette.ink)
+                            .frame(width: 42, height: 42)
+                            .background(CirclePalette.paper, in: Circle())
+                    }
+                    .accessibilityLabel("Centre map on your location")
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 8)
+            .frame(maxHeight: .infinity, alignment: .top)
+
+        }
+        .sheet(item: $selectedCluster) { cluster in
+            ClusterEventsPopup(cluster: cluster)
+                .presentationDetents([.height(365)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
+                .presentationBackground(CirclePalette.canvas)
+        }
+    }
+
+    private func symbol(for cluster: MapCluster) -> String {
+        guard let id = cluster.activityIDs.first,
+              let activity = store.activities.first(where: { $0.id == id }) else { return "sparkles" }
+        return activity.mapSymbol
+    }
+}
+
+/// A pin opens this compact, transient list instead of restoring a persistent
+/// events panel over the map.
+struct ClusterEventsPopup: View {
+    @EnvironmentObject private var store: CircleStore
+    let cluster: MapCluster
+
+    private var activities: [Activity] {
+        cluster.activityIDs.compactMap { id in
+            store.activities.first { $0.id == id }
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Eyebrow("NEAR \(cluster.name.uppercased())")
+                Text("Plans in \(cluster.name)")
+                    .font(CircleType.display(23, weight: .heavy))
+                    .foregroundStyle(CirclePalette.ink)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(activities) { activity in
+                        ActivityCard(activity: activity, friends: fittingFriends(for: activity))
+                            .frame(width: 178, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
+        .padding(.bottom, 20)
+    }
+
+    private func fittingFriends(for activity: Activity) -> [Friend] {
+        let matches = store.friends.filter { tagsOverlap(activity.tags, $0.interests) }
+        return Array((matches.isEmpty ? store.friends : matches).prefix(3))
+    }
+}
+
 struct PlanView: View {
     @EnvironmentObject private var store: CircleStore
     @State private var selectedActivity: Activity?
 
+    private var firstName: String {
+        store.profileName.split(separator: " ").first.map(String.init) ?? "Benjamin"
+    }
+
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 24) {
                 CircleHeader()
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Salutations, Benjamin")
+                    Text("Hi \(firstName)")
                         .font(CircleType.display(32, weight: .heavy))
                         .tracking(-0.45)
                         .foregroundStyle(CirclePalette.ink)
+                    Text("Your week, with room for something good.")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(CirclePalette.muted)
                 }
 
                 MiniCalendarView(events: store.calendarEvents)
@@ -136,6 +534,9 @@ struct PlanView: View {
                     Text("Hangout plans")
                         .font(CircleType.display(21, weight: .bold))
                         .foregroundStyle(CirclePalette.ink)
+                    Text("Ideas worth making time for")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(CirclePalette.muted)
                 }
 
                 ForEach(ActivityCategory.displayOrder, id: \.self) { category in
@@ -146,9 +547,13 @@ struct PlanView: View {
                                 .font(CircleType.label(13))
                                 .tracking(0.4)
                                 .foregroundStyle(category == .sponsored ? CirclePalette.peach : CirclePalette.violetDeep)
-                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 20) {
+
+                            LazyVGrid(
+                                columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)],
+                                spacing: 20
+                            ) {
                                 ForEach(activities) { activity in
-                                    Button(action: { selectedActivity = activity }) {
+                                    Button { selectedActivity = activity } label: {
                                         ActivityCard(activity: activity, friends: fittingFriends(for: activity))
                                     }
                                     .buttonStyle(.plain)
@@ -159,7 +564,7 @@ struct PlanView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.bottom, 40)
+            .padding(.bottom, 26)
         }
         .background(CircleAtmosphere())
         .fullScreenCover(item: $selectedActivity) { activity in
@@ -170,6 +575,31 @@ struct PlanView: View {
     private func fittingFriends(for activity: Activity) -> [Friend] {
         let matches = store.friends.filter { tagsOverlap(activity.tags, $0.interests) }
         return Array((matches.isEmpty ? store.friends : matches).prefix(3))
+    }
+}
+
+struct MapClusterMarker: View {
+    let symbol: String
+    let count: Int
+    let isSelected: Bool
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Image(systemName: symbol)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(isSelected ? CirclePalette.canvas : CirclePalette.ink)
+                .frame(width: 44, height: 44)
+                .background(isSelected ? CirclePalette.violet : CirclePalette.paper, in: Circle())
+                .overlay(Circle().stroke(CirclePalette.canvas.opacity(0.82), lineWidth: 2))
+                .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
+            Text("\(count)")
+                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .foregroundStyle(CirclePalette.canvas)
+                .frame(width: 20, height: 20)
+                .background(CirclePalette.peach, in: Circle())
+                .overlay(Circle().stroke(CirclePalette.canvas, lineWidth: 1.5))
+                .offset(x: 5, y: -5)
+        }
     }
 }
 
@@ -343,13 +773,9 @@ struct ActivityArtwork: View {
 
 // MARK: - Capture tab
 
-enum MicState {
-    case idle, listening, saved
-}
-
 struct CaptureView: View {
     @EnvironmentObject private var store: CircleStore
-    @State private var micState: MicState = .idle
+    @State private var showsPhotoAccessPrompt = false
 
     var body: some View {
         ZStack {
@@ -364,7 +790,7 @@ struct CaptureView: View {
             case .gate:
                 VStack(alignment: .leading, spacing: 20) {
                     Color.clear.frame(height: 44)
-                    GateCard(onScan: { store.startScan() })
+                    GateCard(onGiveFullAccess: { showsPhotoAccessPrompt = true })
                     Spacer()
                 }
                 .padding(.horizontal, 20)
@@ -376,34 +802,58 @@ struct CaptureView: View {
                 }
                 .padding(.horizontal, 20)
             case .reel:
-                // Full-bleed top-to-bottom-tab-bar: the photo fills the whole
-                // width and reaches under the status bar, but respects the
-                // bottom safe area so the caption/star row stays above the
-                // tab bar instead of being covered by it.
+                // The photo is the surface. Controls sit directly on top of it
+                // instead of reserving a separate, empty content region.
                 HighlightReel()
-                    .ignoresSafeArea(edges: [.top, .horizontal])
+                    .ignoresSafeArea()
             }
 
             VStack {
                 ZStack(alignment: .top) {
-                    if store.stage == .reel {
-                        LinearGradient(colors: [.black.opacity(0.42), .clear], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 90)
-                            .allowsHitTesting(false)
+                    Group {
+                        if store.stage == .reel {
+                            CaptureReelHeader(onRescan: { store.rescan() })
+                        } else {
+                            CircleHeader()
+                        }
                     }
-                    CircleHeader()
                         .padding(.horizontal, 20)
                         .padding(.top, store.stage == .reel ? 6 : 0)
                 }
                 Spacer()
             }
+        }
+        // This is intentionally a demo-only permission affordance. It mimics
+        // the system decision without asking Photos.framework for access.
+        .alert("Allow \"Circle\" to access your photos?", isPresented: $showsPhotoAccessPrompt) {
+            Button("Select Photos…") {}
+            Button("Allow Full Access") { store.startScan() }
+            Button("Don't Allow", role: .cancel) {}
+        } message: {
+            Text("Circle uses your library to create a private highlight reel. Photos stay on this device.")
+        }
+    }
+}
 
-            if store.stage == .reel {
-                MicButton(state: $micState)
-                    .padding(.trailing, 20)
-                    .padding(.bottom, 28)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+struct CaptureReelHeader: View {
+    let onRescan: () -> Void
+
+    var body: some View {
+        HStack(spacing: 9) {
+            ProfileMenuButton()
+            Text("circle")
+                .foregroundStyle(CirclePalette.ink)
+                .font(CircleType.display(22, weight: .heavy))
+                .tracking(-0.4)
+            Spacer()
+            Button(action: onRescan) {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(Color.black.opacity(0.38), in: Circle())
             }
+            .accessibilityLabel("Rescan photos")
         }
     }
 }
@@ -488,24 +938,24 @@ private struct FloatingSphere: View {
 }
 
 struct GateCard: View {
-    let onScan: () -> Void
+    let onGiveFullAccess: () -> Void
 
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "camera.viewfinder")
                 .font(.system(size: 30))
                 .foregroundStyle(CirclePalette.violet)
-            Eyebrow("PHOTO-NATIVE")
-            Text("Let Circle learn your circle.")
+            Eyebrow("PHOTO ACCESS")
+            Text("Make space for your memories.")
                 .font(CircleType.display(24, weight: .heavy))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(CirclePalette.ink)
-            Text("Circle scans the photos on this device for the friends you've already added, matching against the reference photo already on each profile. It never uploads a photo.")
+            Text("Give Circle access to your full library to create a private highlight reel with the friends you've already added. Photos never leave this device.")
                 .font(.system(size: 13))
                 .foregroundStyle(CirclePalette.muted)
                 .multilineTextAlignment(.center)
-            Button(action: onScan) {
-                Text("Scan my photos")
+            Button(action: onGiveFullAccess) {
+                Text("Give access to full library")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -556,8 +1006,12 @@ struct ScanningCard: View {
 struct HighlightReel: View {
     @EnvironmentObject private var store: CircleStore
     @State private var index = 0
-    @State private var reasonOpenIndex: Int?
     @State private var asOf = Date()
+    @State private var photoSettled = false
+
+    /// Every reel image gets the same deliberate full-screen crop. The small
+    /// settle is a calm camera-roll motion, not a different layout per photo.
+    private let photoScale: CGFloat = 1.14
 
     private let timer = Timer.publish(every: 7, on: .main, in: .common).autoconnect()
     private static let dateFormatter: DateFormatter = {
@@ -574,96 +1028,56 @@ struct HighlightReel: View {
             } else {
                 let current = ranked[index % ranked.count]
                 let isStarred = store.starredHighlightIDs.contains(current.highlight.id)
-                let showReason = reasonOpenIndex == index
                 GeometryReader { proxy in
                     ZStack {
                         Image(current.highlight.imageName)
                             .resizable()
                             .scaledToFill()
                             .frame(width: proxy.size.width, height: proxy.size.height)
+                            .scaleEffect(photoSettled ? photoScale : photoScale * 1.055)
+                            .saturation(1.04)
+                            .contrast(1.025)
                             .clipped()
                             .id(current.highlight.id)
                             .transition(.opacity)
 
-                        LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.88)], startPoint: .center, endPoint: .bottom)
+                        LinearGradient(
+                            colors: [.clear, .clear, .black.opacity(0.18), .black.opacity(0.78)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
 
                         VStack(spacing: 0) {
-                            SlidingProgressBar(total: ranked.count, index: index, cycleDuration: 7)
-                                .padding(.horizontal, 16)
-                                .padding(.top, 10)
-
-                            HStack {
-                                Spacer()
-                                Button(action: { store.rescan() }) {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .foregroundStyle(.white)
-                                        .frame(width: 34, height: 34)
-                                        .background(.black.opacity(0.4), in: Circle())
-                                }
-                            }
-                            .padding(.top, 14)
-                            .padding(.trailing, 16)
-
                             Spacer()
 
-                            // Keyed and transitioned together with the image above so the
-                            // whole card swaps as one unit — an untagged Text here would
-                            // otherwise interpolate its layout mid-animation and visibly
-                            // ghost the outgoing and incoming captions on top of each other.
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(current.highlight.caption)
-                                    .font(.system(size: 15, weight: .semibold, design: .serif))
+                                    .font(.system(size: 17, weight: .semibold, design: .serif))
                                     .italic()
                                     .lineLimit(2)
                                     .foregroundStyle(.white)
-                                    .shadow(color: .black.opacity(0.5), radius: 6)
+                                    .shadow(color: .black.opacity(0.48), radius: 6)
                                 Text(captionMeta(current.highlight))
-                                    .font(.system(size: 10.5, weight: .semibold))
+                                    .font(.system(size: 11, weight: .semibold))
                                     .lineLimit(1)
-                                    .foregroundStyle(.white.opacity(0.8))
+                                    .foregroundStyle(.white.opacity(0.82))
 
-                                HStack(spacing: 8) {
-                                    Button(action: { store.toggleStar(current.highlight.id) }) {
-                                        HStack(spacing: 5) {
-                                            Image(systemName: isStarred ? "star.fill" : "star")
-                                                .font(.system(size: 10.5, weight: .semibold))
-                                            Text(isStarred ? "Saved" : "Save this feeling")
-                                                .font(.system(size: 11, weight: .bold))
-                                        }
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(isStarred ? CirclePalette.peach.opacity(0.22) : Color.black.opacity(0.35), in: Capsule())
-                                        .overlay(Capsule().stroke(isStarred ? CirclePalette.peach : Color.white.opacity(0.35), lineWidth: 1))
+                                Button(action: { store.toggleStar(current.highlight.id) }) {
+                                    Image(systemName: isStarred ? "star.fill" : "star")
+                                        .font(.system(size: 13, weight: .bold))
                                         .foregroundStyle(isStarred ? CirclePalette.peach : .white)
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    Button(action: {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            reasonOpenIndex = showReason ? nil : index
-                                        }
-                                    }) {
-                                        Text("Why this photo?")
-                                            .font(.system(size: 10.5, weight: .semibold))
-                                            .underline()
-                                            .foregroundStyle(.white.opacity(0.78))
-                                    }
-                                    .buttonStyle(.plain)
+                                        .frame(width: 32, height: 32)
+                                        .background(Color.black.opacity(0.32), in: Circle())
+                                        .overlay(Circle().stroke(isStarred ? CirclePalette.peach.opacity(0.9) : .white.opacity(0.34), lineWidth: 1))
                                 }
-                                .padding(.top, 1)
-
-                                if showReason {
-                                    Text(ReelRanking.explain(current.reason, friendName: store.friendName))
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(.white.opacity(0.92))
-                                        .padding(.top, 1)
-                                        .transition(.opacity)
-                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(isStarred ? "Remove saved photo" : "Save photo")
                             }
-                            .padding(.horizontal, 18)
-                            .padding(.trailing, 92)
-                            .padding(.bottom, 14)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 18)
+                            // The image extends beneath the floating tab bar,
+                            // while this row remains just above its hit area.
+                            .padding(.bottom, 104)
                             .id(current.highlight.id)
                             .transition(.opacity)
                         }
@@ -672,6 +1086,8 @@ struct HighlightReel: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onTapGesture { advance() }
+                    .onAppear { settlePhoto() }
+                    .onChange(of: index) { _, _ in settlePhoto() }
                 }
             }
         }
@@ -681,144 +1097,23 @@ struct HighlightReel: View {
 
     private func advance() {
         guard !store.highlights.isEmpty else { return }
-        reasonOpenIndex = nil
         withAnimation(.easeInOut(duration: 0.3)) {
             index += 1
+        }
+    }
+
+    private func settlePhoto() {
+        photoSettled = false
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 6.6)) {
+                photoSettled = true
+            }
         }
     }
 
     private func captionMeta(_ highlight: Highlight) -> String {
         let names = highlight.friendIds.map { store.friendName($0) }.joined(separator: " and ")
         return "\(names) · \(highlight.place) · \(Self.dateFormatter.string(from: highlight.capturedAt))"
-    }
-}
-
-/// A single continuous track whose fill slides forward through the reel,
-/// rather than one static segment per photo.
-struct SlidingProgressBar: View {
-    let total: Int
-    let index: Int
-    let cycleDuration: Double
-
-    var body: some View {
-        GeometryReader { proxy in
-            let fraction = total > 0 ? CGFloat(index % total + 1) / CGFloat(total) : 0
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.28))
-                Capsule()
-                    .fill(Color.white.opacity(0.95))
-                    .frame(width: proxy.size.width * fraction)
-                    .animation(.linear(duration: cycleDuration), value: index)
-            }
-        }
-        .frame(height: 3)
-    }
-}
-
-struct MicButton: View {
-    @Binding var state: MicState
-    @State private var pulse = false
-    @State private var sheenRotation: Double = 0
-
-    var body: some View {
-        VStack(alignment: .trailing, spacing: 8) {
-            if state == .listening {
-                Text("Listening…")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
-            } else if state == .saved {
-                Text("Saved privately on this device.")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
-            }
-
-            Button(action: handleTap) {
-                ZStack {
-                    LiquidGlassBlobs(active: state == .listening)
-
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 54, height: 54)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    AngularGradient(
-                                        colors: [CirclePalette.violet.opacity(0.95), .white.opacity(0.7), CirclePalette.violet.opacity(0.15), CirclePalette.violet.opacity(0.95)],
-                                        center: .center,
-                                        angle: .degrees(sheenRotation)
-                                    ),
-                                    lineWidth: state == .listening ? 2.4 : 1
-                                )
-                        )
-                        .shadow(color: CirclePalette.violet.opacity(state == .listening ? 0.6 : 0.18), radius: state == .listening ? 16 : 6)
-                        .scaleEffect(state == .listening && pulse ? 1.1 : 1)
-
-                    Image(systemName: state == .listening ? "waveform" : "mic.fill")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 90, height: 90)
-            }
-            .buttonStyle(.plain)
-        }
-        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: state)
-        .onAppear {
-            withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) {
-                sheenRotation = 360
-            }
-            withAnimation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true)) {
-                pulse = true
-            }
-        }
-    }
-
-    private func handleTap() {
-        guard state == .idle else { return }
-        state = .listening
-        Task {
-            try? await Task.sleep(nanoseconds: 1_600_000_000)
-            state = .saved
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            state = .idle
-        }
-    }
-}
-
-/// A soft, continuously-morphing cluster of frosted blobs behind the mic button —
-/// TimelineView drives it so the wobble is a live function of elapsed time rather
-/// than a one-shot interpolation between two states.
-struct LiquidGlassBlobs: View {
-    var active: Bool
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !active)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            ZStack {
-                ForEach(0..<4, id: \.self) { i in
-                    let phase = t * 1.7 + Double(i) * 1.6
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .frame(width: 44, height: 44)
-                        .scaleEffect(0.8 + 0.4 * CGFloat(sin(phase)))
-                        .offset(
-                            x: CGFloat(cos(phase * 0.85)) * 22,
-                            y: CGFloat(sin(phase * 1.15)) * 22
-                        )
-                        .blur(radius: 4)
-                        .opacity(active ? 0.65 : 0)
-                }
-            }
-        }
-        .frame(width: 90, height: 90)
-        .allowsHitTesting(false)
     }
 }
 

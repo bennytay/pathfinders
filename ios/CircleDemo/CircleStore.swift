@@ -15,10 +15,18 @@ final class CircleStore: ObservableObject {
     @Published var personalNotes: [String: String] = CircleStore.demoPersonalNotes
     /// The sole explicit reel-preference signal — a star. No dislike/downvote exists.
     @Published var starredHighlightIDs: Set<String> = []
+    /// Profile data is intentionally kept on-device for this demo, mirroring
+    /// Circle's local-first posture. The picker offers bundled portraits so we
+    /// never need to request broad Photos-library access during a recording.
+    @Published var profileName = "Benjamin Lee"
+    @Published var profileImageName = "isla-morgan"
+    @Published var profileNeighbourhood = "Surry Hills, Sydney"
+    @Published var profileBio = "Here for the plans that turn into stories."
 
     let friends: [Friend] = CircleStore.demoFriends
     let activities: [Activity] = CircleStore.demoActivities
     let calendarEvents: [CalendarEvent] = CircleStore.demoCalendarEvents
+    let mapClusters: [MapCluster] = CircleStore.demoMapClusters
     let highlights: [Highlight] = CircleStore.demoHighlights
 
     func startScan() {
@@ -129,6 +137,14 @@ final class CircleStore: ObservableObject {
         CalendarEvent(title: "Design review", day: 4, start: 2, duration: 2, tone: .green),
         CalendarEvent(title: "Open studio", day: 5, start: 5, duration: 2, tone: .blue),
         CalendarEvent(title: "Beach walk", day: 6, start: 3, duration: 2, tone: .rose),
+    ]
+
+    static let demoMapClusters: [MapCluster] = [
+        MapCluster(id: "redfern", name: "Redfern", latitude: -33.8932, longitude: 151.2040, activityIDs: ["warehouse-dance", "figure-drawing", "night-market"]),
+        MapCluster(id: "haymarket", name: "Haymarket", latitude: -33.8809, longitude: 151.2056, activityIDs: ["rooftop-cinema", "harbour-jazz", "pasta-club"]),
+        MapCluster(id: "darling-harbour", name: "Darling Harbour", latitude: -33.8732, longitude: 151.2013, activityIDs: ["run-club", "open-mic", "zine-fair"]),
+        MapCluster(id: "paddington", name: "Paddington", latitude: -33.8865, longitude: 151.2260, activityIDs: ["record-fair", "foreign-film", "book-launch"]),
+        MapCluster(id: "moore-park", name: "Moore Park", latitude: -33.8997, longitude: 151.2241, activityIDs: ["beginner-bouldering", "park-pilates", "morning-swim"])
     ]
 
     static let demoHighlights: [Highlight] = [

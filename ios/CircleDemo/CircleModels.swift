@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import MapKit
 
 struct Friend: Identifiable, Hashable {
     let id: String
@@ -85,6 +86,30 @@ struct Activity: Identifiable {
     let location: String
     let tags: [String]
     let category: ActivityCategory
+
+    var mapSymbol: String {
+        switch category {
+        case .sponsored: return "music.note"
+        case .sideQuests: return "sparkles"
+        case .afterHours: return "moon.stars.fill"
+        case .popupsAndMarkets: return "bag.fill"
+        case .moveYourBody: return "figure.run"
+        }
+    }
+}
+
+/// A deliberately small set of neighbourhood clusters. The demo stays local:
+/// the pin opens only the activities that are actually in that area.
+struct MapCluster: Identifiable {
+    let id: String
+    let name: String
+    let latitude: Double
+    let longitude: Double
+    let activityIDs: [String]
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
 }
 
 /// Tolerant, case-insensitive overlap check between an activity's tags and a
