@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Circle demo QR</title>
+    <style>
+      :root { color-scheme: dark; font-family: ui-rounded, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      body { min-height: 100dvh; display: grid; place-items: center; margin: 0; background: #080710; color: #eeeef4; }
+      main { width: min(360px, calc(100% - 48px)); text-align: center; }
+      h1 { margin: 0 0 24px; letter-spacing: -1px; } h1 span { color: #c6acf1; }
+      img { display: block; width: 100%; aspect-ratio: 1; padding: 16px; border-radius: 24px; background: #f7f5ff; }
+      p { color: #a1a0ab; font-size: 14px; line-height: 1.45; }
+      code { display: block; overflow-wrap: anywhere; color: #c6acf1; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>circle<span>.</span></h1>
+      <img id="qr" alt="QR code for the Circle web demo" />
+      <p>Open this page on a laptop after deployment, then scan the code with a phone.</p>
+      <code id="url"></code>
+    </main>
+    <script>
+      const destination = new URL('./', location.href).href;
+      document.querySelector('#url').textContent = destination;
+      document.querySelector('#qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=720x720&margin=16&data=${encodeURIComponent(destination)}`;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "circle-web-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "python3 ../scripts/sync_ios_demo.py",
+    "check": "python3 ../scripts/sync_ios_demo.py --check && node --check app.js",
+    "start": "sh ../scripts/serve_web_demo.sh"
+  }
+}
