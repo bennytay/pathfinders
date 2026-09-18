@@ -114,6 +114,8 @@ function render() {
   if (state.capture === "reel") reelTimer = setInterval(() => { state.highlight = (state.highlight + 1) % highlights.length; render(); }, 7000);
 }
 
+// Modal sheets stop bubbling so backdrop taps stay local. Capture the event at
+// the app root so controls inside those sheets, including Done, still work.
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action], [data-tab], [data-friend], [data-activity], [data-cluster], [data-profile-image]");
   if (!target) return;
@@ -133,7 +135,7 @@ app.addEventListener("click", (event) => {
   if (action === "reset") { state.capture = "gate"; state.starred.clear(); render(); return; }
   if (action === "close") { state.modal = null; render(); return; }
   if (action === "share" && navigator.share) navigator.share({ title: state.modal.activity.title, text: `${state.modal.activity.title} at ${state.modal.activity.location}` });
-});
+}, true);
 
 app.addEventListener("input", (event) => {
   if (event.target.matches("[data-note]")) notes[event.target.dataset.note] = event.target.value;
