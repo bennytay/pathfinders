@@ -36,3 +36,80 @@
 @keyframes spin { to { transform: rotate(360deg); } } @keyframes drift { to { transform: translate(24px, -21px); } }
 @media (max-width: 600px) { .preview-stage { display: block; min-height: 100dvh; padding: 0; background: var(--canvas); }.iphone { width: 100%; height: 100dvh; min-height: 0; padding: 0; border-radius: 0; background: none; box-shadow: none; }.iphone-shell { border-radius: 0; box-shadow: none; }.desktop-caption { display: none; }.speaker { top: 12px; }.status-bar { top: 17px; }.home-indicator { bottom: 5px; }.modal-backdrop { align-items: end; } .sheet { max-height: 88dvh; } }
 @media (max-height: 720px) and (min-width: 601px) { .iphone { min-height: 0; } }
+
+/* SwiftUI parity: these measurements mirror CircleRootView on iPhone 17 Pro. */
+.iphone { width: min(420px, calc(100vw - 64px)); height: min(892px, calc(100dvh - 96px)); }
+.speaker, .status-bar, .home-indicator { z-index: 130; }
+.scroll-screen { padding-top: 64px; }
+.symbol { display: block; width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.app-header { gap: 9px; }
+.wordmark { letter-spacing: -.4px; }
+.greeting { margin: 24px 0; }
+.greeting p { font-weight: 500; }
+.calendar { width: 340px; max-width: 100%; }
+.calendar-days { grid-template-columns: 22px repeat(7, 42px); }
+.calendar-grid { grid-template-columns: 22px 294px; }
+.time-grid { width: 294px; background-size: 42px 26px; }
+.activity-section { margin-top: 0; }
+.activity-section + .activity-section { margin-top: 24px; }
+.activity-section > .eyebrow { margin-bottom: 14px; font-size: 13px; letter-spacing: .4px; text-transform: none; }
+.activity-grid { gap: 20px 14px; }
+.activity-card { gap: 6px; }
+.activity-art { border-radius: 12px; }
+.activity-card > small { font-size: 11px; }
+.liquid-nav { bottom: 34px; }
+.liquid-nav .symbol { width: 19px; height: 19px; stroke-width: 2; }
+.liquid-nav button.active .symbol { stroke-width: 2.25; }
+.map-art { filter: invert(.84) hue-rotate(174deg) brightness(.7) saturate(1.55); }
+.map-label, .map-road-label { color: rgb(189 198 207 / .72); text-shadow: 0 1px 2px rgb(0 0 0 / .8); }
+.map-park-label { color: rgb(104 174 137); text-shadow: 0 1px 2px rgb(0 0 0 / .8); }
+.map-marker { border: 2px solid rgb(2 3 12 / .85); background: rgb(10 9 19); color: var(--ink); box-shadow: 0 4px 9px rgb(0 0 0 / .48); }
+.map-marker .symbol { width: 19px; height: 19px; }
+.map-marker small { position: absolute; top: 49px; left: 50%; transform: translateX(-50%); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 10px; font-weight: 700; text-shadow: 0 1px 3px rgb(0 0 0); white-space: nowrap; }
+.map-marker b { border-color: var(--canvas); background: var(--peach); color: var(--canvas); }
+.home-pin { width: 30px; height: 30px; border: 7px solid rgb(174 128 237 / .25); background: var(--violet); box-shadow: 0 0 0 1px var(--violet); }
+.home-pin .symbol { width: 13px; height: 13px; stroke-width: 2.4; }
+.map-top .nearby { padding: 0; border: 0; background: none; color: var(--ink); box-shadow: none; backdrop-filter: none; }
+.map-top .nearby small { color: var(--violet-deep); }
+.locate { border: 0; background: rgb(10 9 19 / .94); color: var(--ink); box-shadow: 0 3px 9px rgb(0 0 0 / .35); }
+.round-control .symbol { width: 18px; height: 18px; }
+.capture-card { position: absolute; top: 132px; left: 20px; width: calc(100% - 40px); max-width: 362px; margin: 0; padding: 24px; }
+.viewfinder { display: grid; place-items: center; transform: none; }
+.viewfinder .symbol { width: 34px; height: 34px; stroke-width: 1.7; }
+.save-star .symbol { width: 17px; height: 17px; }
+.save-star.saved .symbol { fill: currentColor; }
+.socials b { overflow: hidden; }
+.socials b img { width: 100%; height: 100%; object-fit: cover; }
+.section-intro { margin: 24px 0; }
+.event-sheet { height: 100%; max-height: none; border: 0; border-radius: 0; }
+.event-sheet > header { padding-top: 58px; }
+.event-sheet .share { display: grid; width: 28px; height: 28px; place-items: center; padding: 0; }
+.event-sheet .share .symbol { width: 20px; height: 20px; }
+.event-sheet .facts { padding-top: 22px; }
+.facts div { min-height: 92px; }
+.venue-map { position: relative; height: 190px; overflow: hidden; margin-top: 10px; border: 1px solid var(--line); border-radius: 20px; background: repeating-linear-gradient(28deg, transparent 0 28px, rgb(104 116 119 / .25) 29px 31px, transparent 32px 58px), repeating-linear-gradient(-64deg, transparent 0 22px, rgb(245 246 242 / .55) 23px 27px, transparent 28px 67px), #b8c9c1; }
+.venue-map::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 56%, rgb(146 192 211 / .82) 57% 72%, transparent 73%), radial-gradient(ellipse at 25% 75%, rgb(156 192 136 / .75), transparent 28%); }
+.venue-map i { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; transform: translate(-50%, -50%); border: 5px solid rgb(183 135 244 / .3); border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 1px rgb(255 255 255 / .8); }
+.venue-map span { position: absolute; z-index: 1; top: calc(50% + 18px); left: 50%; transform: translateX(-50%); color: #27302e; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.venue-address { display: flex; gap: 8px; margin: 10px 0 0; color: var(--violet-deep); font-size: 12px; }
+.venue-address span { color: var(--muted); }
+.plan-it { padding-bottom: 30px !important; }
+.plan-links { display: grid; gap: 10px; margin-top: 10px; }
+.plan-links a { display: grid; grid-template-columns: 38px 1fr 14px; align-items: center; gap: 14px; min-width: 0; padding: 12px; border: 1px solid rgb(255 255 255 / .18); border-radius: 16px; background: rgb(255 255 255 / .07); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-decoration: none; }
+.plan-links .link-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 50%; background: var(--violet-soft); color: var(--violet-deep); }
+.plan-links .symbol { width: 17px; height: 17px; }
+.plan-links a > span:nth-child(2) { min-width: 0; }
+.plan-links b, .plan-links small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-links b { font-size: 14px; }
+.plan-links small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.plan-links strong { color: var(--muted); font-size: 20px; font-weight: 500; }
+.permission-dialog > span .symbol { width: 26px; height: 26px; }
+.cluster-sheet { height: 365px; }
+.friend-sheet, .profile-sheet { height: calc(100% - 54px); max-height: none; }
+.modal-backdrop, .permission-backdrop { position: absolute; border-radius: 49px; overflow: hidden; }
+
+@media (max-width: 600px) {
+  .iphone { width: 100%; height: 100dvh; }
+  .liquid-nav { bottom: calc(6px + env(safe-area-inset-bottom, 28px)); }
+  .event-sheet { height: 100dvh; max-height: none; }
+}
